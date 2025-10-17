@@ -67,21 +67,13 @@ WORKDIR /app
 # Copy environment file first for better layer caching
 COPY environment.yml .
 
-# Configure conda for better performance and reliability
-RUN conda config --set channel_priority strict &&
-    conda config --set always_yes yes &&
-    conda config --prepend channels conda-forge with RUN conda config --set channel_priority flexible &&
-    conda config --set always_yes yes &&
-    conda config --prepend channels conda-forge
-
-# Create the Conda environment with libmamba solver
-# Using explicit error handling
-RUN conda install -n base conda-libmamba-solver && \
-    conda env create -f environment.yml --solver=libmamba && \
-    conda clean -afy && \
-    find /opt/conda/ -follow -type f -name '*.a' -delete && \
-    find /opt/conda/ -follow -type f -name '*.pyc' -delete && \
-    find /opt/conda/ -follow -type f -name '*.js.map' -delete
+RUN printf "channels:\n - conda-forge\n - defaults\nchannel_priority: flexible\nalways_yes: true\n" > /opt/conda/.condarc &&
+conda install -n base conda-libmamba-solver &&
+conda env create -f environment.yml --solver=libmamba &&
+conda clean -afy &&
+find /opt/conda/ -follow -type f -name '.a' -delete &&
+find /opt/conda/ -follow -type f -name '.pyc' -delete &&
+find /opt/conda/ -follow -type f -name '*.js.map' -delete
 
 # Initialize conda for shell usage
 RUN conda init bash
