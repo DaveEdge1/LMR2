@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "WebSearch"
+      "WebSearch",
+      "Bash(docker build:*)",
+      "Bash(mv:*)",
+      "Bash(DOCKER_BUILDKIT=1 docker build:*)",
+      "Bash(tee:*)"
     ],
     "deny": [],
     "ask": []
