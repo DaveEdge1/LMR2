@@ -247,8 +247,13 @@ docker run -it --rm \
 The repository includes a GitHub Actions workflow (`.github/workflows/docker-build.yml`) that:
 - Builds the image on every push
 - Runs verification tests
-- Pushes to GitHub Container Registry
+- Pushes to Docker Hub
 - Tags with git commit SHA and branch name
+
+**Setup Instructions**: See `.github/DOCKER_HUB_SETUP.md` for step-by-step guide on:
+- Creating Docker Hub access tokens
+- Adding secrets to GitHub repository
+- Configuring automated builds
 
 ## Advanced Usage
 
