@@ -49,7 +49,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libssl-dev \
     ca-certificates \
     # Database libraries (MySQL in environment.yml)
-    default-libmysqlclient-dev \
+    libmariadb-dev \
     # Version control
     git \
     curl \
