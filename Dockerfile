@@ -25,7 +25,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libhdf5-dev \
     libhdf5-serial-dev \
     libnetcdf-dev \
-    libnetcdf19 \
     # Geospatial libraries (GEOS, PROJ, GDAL)
     libgeos-dev \
     libgeos++-dev \
@@ -33,7 +32,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     proj-bin \
     proj-data \
     libgdal-dev \
-    gdal-bin \
     libspatialindex-dev \
     # Graphics and rendering (for matplotlib, cartopy)
     libfreetype6-dev \
@@ -51,7 +49,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libssl-dev \
     ca-certificates \
     # Database libraries (MySQL in environment.yml)
-    libmysqlclient-dev \
+    default-libmysqlclient-dev \
     # Version control
     git \
     curl \
