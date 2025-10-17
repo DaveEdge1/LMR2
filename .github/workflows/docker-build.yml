@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: lmr2-cfr
+  IMAGE_NAME: lmr2
 
 jobs:
   build-and-test:
