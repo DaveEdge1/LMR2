@@ -68,8 +68,10 @@ WORKDIR /app
 COPY environment.yml .
 
 # Configure conda for better performance and reliability
-RUN conda config --set channel_priority strict && \
-    conda config --set always_yes yes && \
+RUN conda config --set channel_priority strict &&
+    conda config --set always_yes yes &&
+    conda config --prepend channels conda-forge with RUN conda config --set channel_priority flexible &&
+    conda config --set always_yes yes &&
     conda config --prepend channels conda-forge
 
 # Create the Conda environment with libmamba solver
