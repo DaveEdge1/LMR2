@@ -1,0 +1,59 @@
+name: Run CFR Analysis
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'cfr_main_code.py'
+      - 'lmr_configs.yml'
+      - '.github/workflows/run-cfr.yml'
+
+env:
+  IMAGE_NAME: davidedge/lmr2:latest
+
+jobs:
+  run-cfr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Pull Docker image
+      run: docker pull ${{ env.IMAGE_NAME }}
+
+    - name: Create output directory
+      run: mkdir -p ./recons
+
+    - name: Run CFR analysis
+      run: |
+        docker run --rm \
+          -v ${{ github.workspace }}/cfr_main_code.py:/app/cfr_main_code.py:ro \
+          -v ${{ github.workspace }}/lmr_configs.yml:/app/lmr_configs.yml:ro \
+          -v ${{ github.workspace }}/recons:/app/recons \
+          -w /app \
+          ${{ env.IMAGE_NAME }} \
+          conda run -n cfr-env python cfr_main_code.py
+
+    - name: List output files
+      run: |
+        echo "Generated files:"
+        ls -lh ./recons/
+
+    - name: Upload results as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: cfr-results-${{ github.run_number }}
+        path: ./recons/
+        retention-days: 30
+
+    - name: Commit results to repository (optional)
+      if: github.event_name == 'push'
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add recons/ || true
+        git diff --staged --quiet || git commit -m "Add CFR analysis results from run ${{ github.run_number }}"
+        git push || echo "No changes to push"
