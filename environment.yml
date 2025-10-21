@@ -9,7 +9,6 @@ dependencies:
   - aiohttp=3.11.7
   - aiosignal=1.3.1
   - anyio=4.6.2
-  - appnope=0.1.2
   - argon2-cffi=21.3.0
   - argon2-cffi-bindings=21.2.0
   - arrow-cpp=16.1.0
@@ -54,6 +53,7 @@ dependencies:
   - contourpy=1.2.0
   - cycler=0.11.0
   - cyrus-sasl=2.1.28
+  - cython=3.0.11
   - cytoolz=1.0.0
   - dask-core=2024.11.2
   - dask-expr=1.1.19
@@ -120,13 +120,11 @@ dependencies:
   - libclang=14.0.6
   - libclang13=14.0.6
   - libcurl=8.9.1
-  - libcxx=19.1.4
   - libdeflate=1.17
   - libedit=3.1.20230828
   - libev=4.33
   - libevent=2.1.12
   - libffi=3.4.4
-  - libgfortran=5.0.0
   - libgfortran5=11.3.0
   - libglib=2.78.4
   - libgrpc=1.62.2
@@ -145,7 +143,6 @@ dependencies:
   - libwebp-base=1.3.2
   - libxml2=2.13.1
   - libzip=1.8.0
-  - llvm-openmp=14.0.6
   - locket=1.0.0
   - lz4=4.3.3
   - lz4-c=1.9.4
@@ -270,7 +267,6 @@ dependencies:
       - cfr-graphem==0.5.0
       - colorama==0.4.6
       - configobj==5.0.9
-      - cython==3.0.11
       - dask==2024.10.0
       - dill==0.3.9
       - doi2bib==0.4.0
@@ -292,19 +288,19 @@ dependencies:
       - numba==0.60.0
       - oct2py==5.7.2
       - octave-kernel==0.36.0
-      - pandas==1.5.3
+      - pandas==2.1.4  # Upgraded from 1.5.3 for pyleoclim compatibility
       - pathos==0.3.3
       - pens==2024.8.23
       - plotly==5.24.1
       - pox==0.3.5
       - ppft==1.7.6.9
       - properscoring==0.1
-      - pybaywatch==2024.4.8
+      # - pybaywatch==2024.4.8  # Package not available on PyPI
       - pybtex==0.25.1
-      - pyleoclim==1.2.1b0
+      - pyleoclim==1.2.1  # Changed from 1.2.1b0 (beta not available)
       - pylipd==1.5.1
       - pyresample==1.31.0
-      - pyvsl==2024.3.16
+      # - pyvsl==2024.3.16  # Package not available on PyPI
       - rdflib==7.1.4
       - scikit-learn==1.5.2
       - seaborn==0.13.2
