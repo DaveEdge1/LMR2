@@ -89,11 +89,3 @@ jobs:
         no-cache: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
-
-    - name: Image digest
-      if: github.event_name != 'pull_request'
-      run: |
-        cat <<EOF
-        Pushed images:
-        ${{ steps.meta.outputs.tags }}
-        EOF
