@@ -92,4 +92,8 @@ jobs:
 
     - name: Image digest
       if: github.event_name != 'pull_request'
-      run: echo "${{ steps.meta.outputs.tags }}"
+      run: |
+        cat <<EOF
+        Pushed images:
+        ${{ steps.meta.outputs.tags }}
+        EOF
