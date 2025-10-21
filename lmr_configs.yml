@@ -92,8 +92,8 @@ prior_regrid_nlon: 63
 # the below part is specific to the prior datasets
 # and most of them should be configured by us, not the users; users may select dataset to use though
 prior_path:
-  pr: ./prev_data/ccsm4_last_millenium/pr_sfc_Amon_CCSM4_past1000_085001-185012.nc
-  tas: ./prev_data/ccsm4_last_millenium/tas_sfc_Amon_CCSM4_past1000_085001-185012.nc
+  pr: CCSM4_past1000/pr
+  tas: CCSM4_past1000/tas
 prior_lat_name: lat
 prior_lon_name: lon
 prior_time_name: time
@@ -102,7 +102,7 @@ prior_time_name: time
 # and most of them should be configured by us, not the users; users may select dataset to use though
 obs_path:
 # cfr supports the below nicknames to fetch data from the cloud
-  pr: ./prev_data/GPCC_precip.mon.flux.1x1.v6.nc
+  pr: GPCC_precip
   tas: gistemp1200_ERSSTv4
 obs_rename_dict:
   pr: precip         # the original variable name in the loaded pr dataset
