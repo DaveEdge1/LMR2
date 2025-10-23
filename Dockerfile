@@ -2,6 +2,7 @@
 # continuumio/miniconda3 is based on Debian
 FROM continuumio/miniconda3:24.7.1-0
 
+RUN mkdir /data
 RUN wget https://atmos.uw.edu/~wperkins/nobackup/lmr_data/data/analyses/GPCC/GPCC_precip.mon.flux.1x1.v6.nc -O /data/GPCC_precip.mon.flux.1x1.v6.nc
 RUN wget https://atmos.uw.edu/~wperkins/nobackup/lmr_data/data/model/ccsm4_last_millenium/pr_sfc_Amon_CCSM4_past1000_085001-185012.nc -O /data/pr_sfc_Amon_CCSM4_past1000_085001-185012.nc
 RUN wget https://atmos.uw.edu/~wperkins/nobackup/lmr_data/data/model/ccsm4_last_millenium/tas_sfc_Amon_CCSM4_past1000_085001-185012.nc -O /data/tas_sfc_Amon_CCSM4_past1000_085001-185012.nc
