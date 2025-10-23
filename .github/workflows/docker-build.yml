@@ -66,6 +66,8 @@ jobs:
         print(f'Pandas: {pd.__version__}')
         print(f'xarray: {xr.__version__}')
         print(f'CFR: {cfr.__version__}')
+        print('\nChecking xarray backends:')
+        print(f'Available backends: {list(xr.backends.list_engines())}')
         "
 
     - name: Test - Check Python version
