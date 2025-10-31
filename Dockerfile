@@ -5,6 +5,8 @@ FROM continuumio/miniconda3:24.7.1-0
 # Set noninteractive to avoid prompts during build
 ENV DEBIAN_FRONTEND=noninteractive
 
+RUN curl -o PAGES2kV2.nc https://drive.google.com/uc?export=download&id=1XTNSfrajvw_3og1_1bP9BkcocqEMCmqM
+
 # Install comprehensive system dependencies for scientific Python
 # Organized by category for maintainability
 RUN apt-get update && apt-get install -y --no-install-recommends \
