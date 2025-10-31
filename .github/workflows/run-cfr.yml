@@ -1,12 +1,14 @@
 name: Run CFR Analysis
 
 on:
+  workflow_run:
+      workflows: ['docker-build']
+      types: [completed]  
   workflow_dispatch:
   push:
     paths:
       - 'cfr_main_code.py'
       - 'lmr_configs.yml'
-      - '.github/workflows/run-cfr.yml'
 
 env:
   IMAGE_NAME: davidedge/lmr2:latest
