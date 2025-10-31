@@ -5,7 +5,16 @@
       "Bash(docker build:*)",
       "Bash(mv:*)",
       "Bash(DOCKER_BUILDKIT=1 docker build:*)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(python -m pip:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git log:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
