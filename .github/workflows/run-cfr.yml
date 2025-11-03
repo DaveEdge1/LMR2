@@ -2,8 +2,8 @@ name: Run CFR Analysis
 
 on:
   workflow_run:
-      workflows: ['docker-build']
-      types: [completed]  
+    workflows: ['docker-build']
+    types: [completed]
   workflow_dispatch:
   push:
     paths:
@@ -20,13 +20,20 @@ jobs:
       contents: write
 
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
     - name: Download PAGES2kV2.nc
       run: |
         python -m pip install --user gdown
-        ~/.local/bin/gdown 'https://drive.google.com/uc?id=1XTNSfrajvw_3og1_1bP9BkcocqEMCmqM' -O PAGES2kV2.nc
-    
-    - name: Checkout repository
-      uses: actions/checkout@v4
+        python -m gdown 'https://drive.google.com/uc?id=1XTNSfrajvw_3og1_1bP9BkcocqEMCmqM' -O "${GITHUB_WORKSPACE}/PAGES2kV2.nc"
+
+    - name: Verify PAGES2kV2.nc
+      run: |
+        echo "Checking downloaded file:"
+        ls -lh "${GITHUB_WORKSPACE}/PAGES2kV2.nc" || (echo "PAGES2kV2.nc missing" && exit 1)
+        # optional quick sanity check (first bytes)
+        head -c 8 "${GITHUB_WORKSPACE}/PAGES2kV2.nc" | xxd -p || true
 
     - name: Create swap space
       run: |
@@ -46,10 +53,10 @@ jobs:
     - name: Run CFR analysis
       run: |
         docker run --rm \
-          -v PAGES2kV2.nc:/app/PAGES2kV2.nc
-          -v ${{ github.workspace }}/cfr_main_code.py:/app/cfr_main_code.py:ro \
-          -v ${{ github.workspace }}/lmr_configs.yml:/app/lmr_configs.yml:ro \
-          -v ${{ github.workspace }}/recons:/app/recons \
+          -v "${{ github.workspace }}/PAGES2kV2.nc":/app/PAGES2kV2.nc:ro \
+          -v "${{ github.workspace }}/cfr_main_code.py":/app/cfr_main_code.py:ro \
+          -v "${{ github.workspace }}/lmr_configs.yml":/app/lmr_configs.yml:ro \
+          -v "${{ github.workspace }}/recons":/app/recons \
           -w /app \
           ${{ env.IMAGE_NAME }} \
           conda run -n cfr-env python cfr_main_code.py
