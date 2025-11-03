@@ -7,7 +7,7 @@ This repository showcases the use of containers, configuration files, and GitHub
 
 ### How to use this repository
 
-Clone and use
+#### Clone and use   
 You can use a clone of this repo to run LMRv2 yourself. Simply
 - clone the repo
 - make any edits you would like to the reconstruction configs (lmr_configs.yml) following the instructions from [cfr](https://fzhu2e.github.io/cfr/ug-lmr.html)
@@ -15,3 +15,7 @@ You can use a clone of this repo to run LMRv2 yourself. Simply
   - automatically initiated when changes to lmr_configs.yml are pushed
   - can be manually initiated on the Actions tab of the cloned repo
 - reconstruction data are saved for 30 days
+
+### Note on repository structure
+
+The Dockerfile and associated workflow file show the construction of the container where the computation takes place. This code is kept within this repo to show the provenance of the container environment. Altering the container image allows for future updates to the reconstruction methods but requires utilyzing your own container registry and editing the repository secrets used to access it.
