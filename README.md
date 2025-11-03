@@ -10,4 +10,5 @@ This repository showcases the use of containers, configuration files, and GitHub
 Clone and use
 You can use a clone of this repo to run LMRv2 yourself. Simply
 - clone the repo
-- 
+- make any edits you would like to the reconstruction configs (lmr_configs.yml) following the instructions from [cfr](https://fzhu2e.github.io/cfr/ug-lmr.html)
+- initiate the Run CFR action
