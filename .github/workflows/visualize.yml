@@ -65,6 +65,20 @@ jobs:
         run: |
           echo "Downloaded CFR artifacts:"
           ls -lh ./cfr-data/
+          echo ""
+          echo "Checking subdirectories:"
+          find ./cfr-data -type f -name "*.nc" | head -20
+
+      - name: Flatten directory structure
+        run: |
+          echo "Flattening directory structure for presto-viz..."
+          # Find all .nc files and move them to cfr-data root
+          find ./cfr-data -type f -name "*.nc" -exec mv {} ./cfr-data/ \;
+          # Remove empty subdirectories
+          find ./cfr-data -type d -empty -delete
+          echo ""
+          echo "Files after flattening:"
+          ls -lh ./cfr-data/
 
       - name: Re-upload for presto-viz
         uses: actions/upload-artifact@v4
