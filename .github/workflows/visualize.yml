@@ -90,7 +90,8 @@ jobs:
   visualize:
     name: Generate Presto Visualization
     needs: [find-latest-cfr-run, download-cfr-artifact]
-    uses: DaveEdge1/presto-viz/.github/workflows/presto-viz-reusable.yml@main
+    # Using fix branch until PR is merged - see .github/PRESTO_VIZ_FIX.md
+    uses: DaveEdge1/presto-viz/.github/workflows/presto-viz-reusable.yml@fix/cfr-dimension-order
     with:
       reconstruction_id: CFR_Run_${{ needs.find-latest-cfr-run.outputs.run_number }}_Reviz_${{ github.run_number }}
       artifact_name: cfr-data-for-viz-${{ github.run_number }}
