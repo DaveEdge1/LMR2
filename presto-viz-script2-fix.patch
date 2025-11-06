@@ -1,0 +1,15 @@
+--- a/2_make_maps_and_ts.py
++++ b/2_make_maps_and_ts.py
+@@ -45,8 +45,10 @@ output_dir = sys.argv[2]
+ #%% LOAD DATA
+ var_txt      = 'tas'
+ quantity_txt = 'Annual'
+-if   'holocene_da' in data_dir: dataset_txt = 'daholocene'; version_txt = data_dir.split('_holocene_da')[0].split('/')[-1]
+-elif 'graph_em'    in data_dir: dataset_txt = 'graphem';    version_txt = data_dir.split('_graph_em')[0].split('/')[-1]
++if   'holocene_da' in data_dir:
++    dataset_txt = 'daholocene'; version_txt = data_dir.split('_holocene_da')[0].split('/')[-1]
++elif 'graph_em' in data_dir:
++    dataset_txt = 'graphem';    version_txt = data_dir.split('_graph_em')[0].split('/')[-1]
++else:
++    dataset_txt = 'cfr';        version_txt = data_dir.rstrip('/').split('/')[-1]
+

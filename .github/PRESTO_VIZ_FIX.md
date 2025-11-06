@@ -1,4 +1,55 @@
-# Presto-Viz CFR Data Fix
+# Presto-Viz CFR Data Fixes
+
+## CRITICAL: Two Fixes Required in presto-viz Repository!
+
+There are **TWO bugs** in presto-viz that prevent CFR data from working:
+
+1. **Script 1 Bug**: Dimension ordering (causes merge error)
+2. **Script 2 Bug**: Missing CFR detection (causes NameError)
+
+Both must be fixed for visualization to work!
+
+---
+
+## Fix 1: Script 1 Dimension Bug (APPLIED ✓)
+
+### Status: Applied to presto-viz main branch
+
+This fix has been applied. If you still see dimension errors, verify the fix is in your presto-viz repository.
+
+---
+
+## Fix 2: Script 2 CFR Detection Bug (NEW - MUST APPLY)
+
+### Problem
+Script 2 (`2_make_maps_and_ts.py`) doesn't detect CFR datasets, causing:
+```
+NameError: name 'dataset_txt' is not defined
+```
+
+### Fix for 2_make_maps_and_ts.py
+
+**Around lines 48-50, find:**
+```python
+if   'holocene_da' in data_dir: dataset_txt = 'daholocene'; version_txt = data_dir.split('_holocene_da')[0].split('/')[-1]
+elif 'graph_em'    in data_dir: dataset_txt = 'graphem';    version_txt = data_dir.split('_graph_em')[0].split('/')[-1]
+```
+
+**Replace with:**
+```python
+if   'holocene_da' in data_dir:
+    dataset_txt = 'daholocene'; version_txt = data_dir.split('_holocene_da')[0].split('/')[-1]
+elif 'graph_em' in data_dir:
+    dataset_txt = 'graphem';    version_txt = data_dir.split('_graph_em')[0].split('/')[-1]
+else:
+    dataset_txt = 'cfr';        version_txt = data_dir.rstrip('/').split('/')[-1]
+```
+
+**Quick Apply:** See `presto-viz-script2-fix.patch` in this repo.
+
+---
+
+## Original Fix 1 Documentation
 
 ## IMPORTANT: You Must Apply This Fix to presto-viz Repository First!
 
