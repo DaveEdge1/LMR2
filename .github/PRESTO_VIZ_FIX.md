@@ -1,44 +1,73 @@
-# Presto-Viz CFR Data Fixes
+# Presto-Viz CFR/LMR Data Fixes
 
-## CRITICAL: Two Fixes Required in presto-viz Repository!
+## CRITICAL: Multiple Fixes Required in presto-viz Repository!
 
-There are **TWO bugs** in presto-viz that prevent CFR data from working:
+There are **FOUR bugs** in presto-viz that prevent CFR/LMR data from working:
 
-1. **Script 1 Bug**: Dimension ordering (causes merge error)
-2. **Script 2 Bug**: Missing CFR detection (causes NameError)
+1. **Script 1 Bug 1a**: Dimension ordering (causes merge error)
+2. **Script 1 Bug 1b**: File path construction (causes FileNotFoundError)
+3. **Script 1 Bug 1c**: Dataset name 'cfr' vs 'lmr' (causes ref_period error)
+4. **Script 2 Bug**: Missing CFR detection (causes NameError)
 
-Both must be fixed for visualization to work!
+All must be fixed for visualization to work!
 
 ---
 
-## Fix 1: Script 1 Multiple Bugs (NEEDS UPDATE)
+## Fix 1: Script 1 - THREE Changes Required
 
-### Status: Partially applied - file path bug discovered
+### Bug 1a: Dimension Ordering
 
-Script 1 has TWO bugs that both need fixing:
-1. ✅ Dimension ordering bug (applied)
-2. ❌ File path construction bug (NEW - not yet applied)
+**Lines ~174-180**
 
-### Bug 1a: Dimension Ordering (Already Fixed)
-The swapaxes issue - should already be fixed in your presto-viz.
+Remove the `np.swapaxes` lines:
 
-### Bug 1b: File Path Construction (NEW FIX REQUIRED)
-
-**Problem:** Missing path separator when saving output file.
-
-**Current broken code (line ~227):**
 ```python
-output_file = data_dir + filename_txt + '.nc'
+# REMOVE these two lines:
+var_spatial_members = np.swapaxes(var_spatial_members, 0, 1)
+var_global_members = np.swapaxes(var_global_members, 0, 1)
+
+# Keep only the expand_dims:
+var_spatial_members = np.expand_dims(var_spatial_members, axis=0)
+var_global_members = np.expand_dims(var_global_members, axis=0)
 ```
 
-**Fixed code:**
+### Bug 1b: File Path Construction
+
+**Line ~227**
+
 ```python
+# Change from:
+output_file = data_dir + filename_txt + '.nc'
+
+# To:
 output_file = os.path.join(data_dir, filename_txt + '.nc')
 ```
 
-This produces paths like:
-- ❌ Broken: `/data/CFR_Run_17cfr_vCFR_Run_17_tas_annual.nc`
-- ✅ Fixed: `/data/CFR_Run_17/cfr_vCFR_Run_17_tas_annual.nc`
+### Bug 1c: Dataset Name (NEW)
+
+**Line ~28-30** - In the detection section:
+
+```python
+# Change from:
+else:
+    dataset_txt = 'cfr'
+
+# To:
+else:
+    dataset_txt = 'lmr'  # Script 2 expects 'lmr', not 'cfr'
+```
+
+**Line ~68** - In the processing section:
+
+```python
+# Change from:
+if dataset_txt == 'cfr':
+
+# To:
+if dataset_txt == 'lmr':
+```
+
+**Why:** Script 2 recognizes these dataset types: `'daholocene'`, `'graphem'`, `'lmr'`, etc. but NOT `'cfr'`. Using `'cfr'` causes `NameError: name 'ref_period' is not defined`.
 
 ---
 

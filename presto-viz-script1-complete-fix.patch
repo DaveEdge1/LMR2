@@ -1,0 +1,56 @@
+--- a/1_format_data_daholocene_graphem.py
++++ b/1_format_data_daholocene_graphem.py
+@@ -27,9 +27,9 @@ elif 'graph_em' in data_dir or any('graphem' in f.lower() for f in nc_files):
+ elif any('test-run' in f for f in nc_files) or os.path.exists(data_dir + 'test-run-graphem-cfg/'):
+     dataset_txt = 'graphem'
+     version_txt = data_dir.rstrip('/').split('/')[-1]
+     print(f"Detected: GraphEM reconstruction (via test-run)")
+ else:
+-    dataset_txt = 'cfr'
++    dataset_txt = 'lmr'
+     version_txt = data_dir.rstrip('/').split('/')[-1]
+     print(f"Detected: CFR/LMR2 reconstruction (treating as generic format)")
+
+@@ -65,7 +65,7 @@ if dataset_txt == 'graphem':
+     # ... graphem processing code ...
+
+ # CFR/LMR2 processing
+-if dataset_txt == 'cfr':
++if dataset_txt == 'lmr':
+     print("=== Processing CFR/LMR2 Reconstruction ===")
+
+     # Load the first NetCDF file
+@@ -172,12 +172,10 @@ if dataset_txt == 'cfr':
+     if var_spatial_members.ndim == 3:  # (ens, lat, lon) - no time
+         var_spatial_members = np.expand_dims(var_spatial_members, axis=1)  # Add time dimension
+     if var_spatial_members.ndim == 4:  # (ens, time, lat, lon)
+-        var_spatial_members = np.swapaxes(var_spatial_members, 0, 1)  # -> (time, ens, lat, lon)
+-        var_spatial_members = np.expand_dims(var_spatial_members, axis=0)  # Add method dimension
++        var_spatial_members = np.expand_dims(var_spatial_members, axis=0)  # Add method dimension -> (method, ens, time, lat, lon)
+
+     if var_global_members.ndim == 2:  # (ens, time)
+-        var_global_members = np.swapaxes(var_global_members, 0, 1)  # -> (time, ens)
+-        var_global_members = np.expand_dims(var_global_members, axis=0)  # Add method dimension
++        var_global_members = np.expand_dims(var_global_members, axis=0)  # Add method dimension -> (method, ens, time)
+
+     var_global_mean = np.mean(var_global_members, axis=1)
+
+@@ -193,7 +191,7 @@ if dataset_txt == 'cfr':
+     ens_global = np.arange(var_global_members.shape[1]) + 1
+     notes = ['Processed from CFR/LMR2 output']
+
+-    # Get other metadata
+-    methods = ['CFR/LMR2']
++    # Get metadata
++    methods = ['LMR']
+     ens_spatial = np.arange(var_spatial_members.shape[1]) + 1
+     ens_global = np.arange(var_global_members.shape[1]) + 1
+     notes = ['Processed from CFR/LMR2 output']
+@@ -224,7 +222,7 @@ if dataset_txt == 'cfr':
+     )
+
+     ### SAVE DATA
+-    output_file = data_dir + filename_txt + '.nc'
++    output_file = os.path.join(data_dir, filename_txt + '.nc')
+     data_xarray_output.to_netcdf(output_file)
+     print(f' ===== FINISHED script 1: Data reformatted and saved to: {output_file} =====')
