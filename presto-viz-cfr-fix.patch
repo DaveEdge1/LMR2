@@ -1,11 +1,12 @@
 From 2418f8f0265dc14ab2a939685f576f44f9c1b271 Mon Sep 17 00:00:00 2001
 From: "github-actions[bot]" <github-actions[bot]@users.noreply.github.com>
 Date: Wed, 5 Nov 2025 22:29:23 +0000
-Subject: [PATCH] Fix CFR data dimension order and file path construction
+Subject: [PATCH] Fix CFR/LMR data processing bugs in script 1
 
-The CFR data processing had two bugs:
+The CFR/LMR data processing had multiple bugs:
 1. Incorrectly swapping time and ensemble dimensions
 2. Missing path separator when constructing output file path
+3. Using 'cfr' dataset name instead of 'lmr' (script 2 doesn't recognize 'cfr')
 
 Changes:
 - Remove unnecessary swapaxes operations for CFR data
@@ -13,10 +14,12 @@ Changes:
 - This produces correct shape: (method, ens, time) instead of (method, time, ens)
 - Now var_global_mean correctly averages ensemble members (axis=1)
 - Fix output_file path to use os.path.join() for proper path construction
+- Set dataset_txt = 'lmr' instead of 'cfr' to match script 2 expectations
 
 Fixes:
 - ValueError: conflicting sizes for dimension 'age'
 - FileNotFoundError: missing '/' separator in output path
+- NameError: Unknown dataset 'cfr', ref_period not defined
 ---
  1_format_data_daholocene_graphem.py | 8 +++-----
  1 file changed, 3 insertions(+), 5 deletions(-)
