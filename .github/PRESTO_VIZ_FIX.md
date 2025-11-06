@@ -2,13 +2,14 @@
 
 ## CRITICAL: Multiple Fixes Required in presto-viz Repository!
 
-There are **FIVE bugs** in presto-viz that prevent CFR/LMR data from working:
+There are **SIX bugs** in presto-viz that prevent CFR/LMR data from working:
 
 1. **Script 1 Bug 1a**: Dimension ordering (causes merge error)
 2. **Script 1 Bug 1b**: File path construction (causes FileNotFoundError)
 3. **Script 1 Bug 1c**: Dataset name 'cfr' vs 'lmr' (causes ref_period error)
 4. **Script 2 Bug 2a**: Missing CFR detection (causes NameError)
 5. **Script 2 Bug 2b**: Longitude cyclic point (causes ValueError)
+6. **Script 2 Bug 2c**: AR6 regionmask longitude wrapping (causes ValueError)
 
 All must be fixed for visualization to work!
 
@@ -153,6 +154,40 @@ if map_type == "contourf":
 ```
 
 **Quick Apply:** See `presto-viz-script2-cyclic-fix.patch` in this repo.
+
+### Bug 2c: AR6 Regionmask Longitude Wrapping (NEW)
+
+**Line ~935** - Wrap ar6_all.mask_3D call in try/except
+
+The regionmask library's `mask_3D()` function also validates longitude coordinates and fails when CFR data has wrapped coordinates (e.g., 0 to 360):
+```
+ValueError: There are equal longitude coordinates (when wrapped)!
+```
+
+This error occurs AFTER "Processing: 42/42" when generating regional time series.
+
+**Fix:** Wrap the `mask_3D` call and remove the last longitude point if it duplicates the first.
+
+**Line ~935:**
+```python
+# Change from:
+mask_3D = ar6_all.mask_3D(lon, lat)
+
+# To:
+try:
+    mask_3D = ar6_all.mask_3D(lon, lat)
+except ValueError as e:
+    if "equal longitude coordinates" in str(e):
+        print(f'Warning: Longitude coordinates appear to wrap. Removing last point.')
+        lon_adjusted = lon[:-1]
+        mask_3D = ar6_all.mask_3D(lon_adjusted, lat)
+        # Also slice the spatial data to match
+        var_spatial_mean = var_spatial_mean[:,:,:,:-1]
+    else:
+        raise
+```
+
+**Quick Apply:** See `presto-viz-script2-regionmask-fix.patch` in this repo.
 
 ---
 
