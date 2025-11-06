@@ -1,5 +1,16 @@
 # Presto-Viz CFR Data Fix
 
+## IMPORTANT: You Must Apply This Fix to presto-viz Repository First!
+
+The workflow is currently using `@main` temporarily, but **it will still fail with the dimension error** until you apply this fix to the presto-viz repository.
+
+## Quick Start
+
+1. Navigate to your presto-viz repository
+2. Apply the patch file from this repo: `presto-viz-cfr-fix.patch`
+3. Push to either `main` or create the `fix/cfr-dimension-order` branch
+4. Update LMR2's visualize.yml to reference the fixed branch
+
 ## Problem
 The presto-viz script `1_format_data_daholocene_graphem.py` has a bug when processing CFR/LMR2 data. It incorrectly swaps the time and ensemble dimensions, causing the ensemble mean to be computed across the time axis instead of the ensemble axis.
 
