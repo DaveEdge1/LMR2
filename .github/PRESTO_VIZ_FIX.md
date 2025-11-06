@@ -2,12 +2,13 @@
 
 ## CRITICAL: Multiple Fixes Required in presto-viz Repository!
 
-There are **FOUR bugs** in presto-viz that prevent CFR/LMR data from working:
+There are **FIVE bugs** in presto-viz that prevent CFR/LMR data from working:
 
 1. **Script 1 Bug 1a**: Dimension ordering (causes merge error)
 2. **Script 1 Bug 1b**: File path construction (causes FileNotFoundError)
 3. **Script 1 Bug 1c**: Dataset name 'cfr' vs 'lmr' (causes ref_period error)
-4. **Script 2 Bug**: Missing CFR detection (causes NameError)
+4. **Script 2 Bug 2a**: Missing CFR detection (causes NameError)
+5. **Script 2 Bug 2b**: Longitude cyclic point (causes ValueError)
 
 All must be fixed for visualization to work!
 
@@ -71,10 +72,13 @@ if dataset_txt == 'lmr':
 
 ---
 
-## Fix 2: Script 2 CFR Detection Bug (NEW - MUST APPLY)
+## Fix 2: Script 2 - TWO Changes Required
 
-### Problem
-Script 2 (`2_make_maps_and_ts.py`) doesn't detect CFR datasets, causing:
+### Bug 2a: CFR Detection (Must Apply)
+
+**Lines ~48-50** - Add else clause for dataset detection
+
+Script 2 doesn't detect CFR datasets, causing:
 ```
 NameError: name 'dataset_txt' is not defined
 ```
@@ -98,6 +102,57 @@ else:
 ```
 
 **Quick Apply:** See `presto-viz-script2-fix.patch` in this repo.
+
+### Bug 2b: Longitude Cyclic Point Error (NEW)
+
+**Lines ~520 and ~710** - Wrap add_cyclic_point in try/except
+
+CFR/LMR data may have longitude coordinates that already span the full 360° range, causing:
+```
+ValueError: There are equal longitude coordinates (when wrapped)!
+```
+
+**Fix:** Wrap both `add_cyclic_point` calls in try/except blocks.
+
+**Location 1: Lines ~520-530** (Pre-computation loop)
+```python
+# Change from:
+for idx in range(len(time_var)):
+    var_cyc, lon_cyc = cutil.add_cyclic_point(
+        var_spatial_mean_allmethods[idx,:,:], coord=lon)
+
+# To:
+for idx in range(len(time_var)):
+    try:
+        var_cyc, lon_cyc = cutil.add_cyclic_point(
+            var_spatial_mean_allmethods[idx,:,:], coord=lon)
+    except ValueError as e:
+        print(f'Warning: Could not add cyclic point: {e}. Using data as-is.')
+        var_cyc = var_spatial_mean_allmethods[idx,:,:]
+        lon_cyc = lon
+```
+
+**Location 2: Lines ~710-720** (Main processing loop)
+```python
+# Change from:
+if map_type == "contourf":
+    var_cyclic, lon_cyclic = cutil.add_cyclic_point(
+        var_spatial_mean_allmethods[i,:,:], coord=lon
+    )
+
+# To:
+if map_type == "contourf":
+    try:
+        var_cyclic, lon_cyclic = cutil.add_cyclic_point(
+            var_spatial_mean_allmethods[i,:,:], coord=lon
+        )
+    except ValueError as e:
+        print(f'Warning: Could not add cyclic point: {e}. Using data as-is.')
+        var_cyclic = var_spatial_mean_allmethods[i,:,:]
+        lon_cyclic = lon
+```
+
+**Quick Apply:** See `presto-viz-script2-cyclic-fix.patch` in this repo.
 
 ---
 
