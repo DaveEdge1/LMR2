@@ -11,11 +11,34 @@ Both must be fixed for visualization to work!
 
 ---
 
-## Fix 1: Script 1 Dimension Bug (APPLIED ✓)
+## Fix 1: Script 1 Multiple Bugs (NEEDS UPDATE)
 
-### Status: Applied to presto-viz main branch
+### Status: Partially applied - file path bug discovered
 
-This fix has been applied. If you still see dimension errors, verify the fix is in your presto-viz repository.
+Script 1 has TWO bugs that both need fixing:
+1. ✅ Dimension ordering bug (applied)
+2. ❌ File path construction bug (NEW - not yet applied)
+
+### Bug 1a: Dimension Ordering (Already Fixed)
+The swapaxes issue - should already be fixed in your presto-viz.
+
+### Bug 1b: File Path Construction (NEW FIX REQUIRED)
+
+**Problem:** Missing path separator when saving output file.
+
+**Current broken code (line ~227):**
+```python
+output_file = data_dir + filename_txt + '.nc'
+```
+
+**Fixed code:**
+```python
+output_file = os.path.join(data_dir, filename_txt + '.nc')
+```
+
+This produces paths like:
+- ❌ Broken: `/data/CFR_Run_17cfr_vCFR_Run_17_tas_annual.nc`
+- ✅ Fixed: `/data/CFR_Run_17/cfr_vCFR_Run_17_tas_annual.nc`
 
 ---
 

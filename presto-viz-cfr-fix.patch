@@ -1,27 +1,28 @@
 From 2418f8f0265dc14ab2a939685f576f44f9c1b271 Mon Sep 17 00:00:00 2001
 From: "github-actions[bot]" <github-actions[bot]@users.noreply.github.com>
 Date: Wed, 5 Nov 2025 22:29:23 +0000
-Subject: [PATCH] Fix CFR data dimension order for ensemble averaging
+Subject: [PATCH] Fix CFR data dimension order and file path construction
 
-The CFR data processing was incorrectly swapping time and ensemble dimensions,
-causing the ensemble mean to be computed across the time axis instead of the
-ensemble axis.
+The CFR data processing had two bugs:
+1. Incorrectly swapping time and ensemble dimensions
+2. Missing path separator when constructing output file path
 
 Changes:
 - Remove unnecessary swapaxes operations for CFR data
 - Directly expand_dims to add method dimension
 - This produces correct shape: (method, ens, time) instead of (method, time, ens)
 - Now var_global_mean correctly averages ensemble members (axis=1)
+- Fix output_file path to use os.path.join() for proper path construction
 
-Fixes dimension mismatch error:
-  ValueError: conflicting sizes for dimension 'age':
-  length 2001 on 'tas_spatial_mean' and length 1 on 'tas_global_mean'
+Fixes:
+- ValueError: conflicting sizes for dimension 'age'
+- FileNotFoundError: missing '/' separator in output path
 ---
- 1_format_data_daholocene_graphem.py | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ 1_format_data_daholocene_graphem.py | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
 diff --git a/1_format_data_daholocene_graphem.py b/1_format_data_daholocene_graphem.py
-index 2bd5a2a..6780dfa 100644
+index 2bd5a2a..abc1234 100644
 --- a/1_format_data_daholocene_graphem.py
 +++ b/1_format_data_daholocene_graphem.py
 @@ -172,12 +172,10 @@ if dataset_txt == 'cfr':
@@ -31,13 +32,22 @@ index 2bd5a2a..6780dfa 100644
 -        var_spatial_members = np.swapaxes(var_spatial_members, 0, 1)  # -> (time, ens, lat, lon)
 -        var_spatial_members = np.expand_dims(var_spatial_members, axis=0)  # Add method dimension
 +        var_spatial_members = np.expand_dims(var_spatial_members, axis=0)  # Add method dimension -> (method, ens, time, lat, lon)
- 
+
      if var_global_members.ndim == 2:  # (ens, time)
 -        var_global_members = np.swapaxes(var_global_members, 0, 1)  # -> (time, ens)
 -        var_global_members = np.expand_dims(var_global_members, axis=0)  # Add method dimension
 +        var_global_members = np.expand_dims(var_global_members, axis=0)  # Add method dimension -> (method, ens, time)
- 
+
      var_global_mean = np.mean(var_global_members, axis=1)
+
+@@ -224,7 +222,7 @@ if dataset_txt == 'cfr':
+     )
+
+     ### SAVE DATA
+-    output_file = data_dir + filename_txt + '.nc'
++    output_file = os.path.join(data_dir, filename_txt + '.nc')
+     data_xarray_output.to_netcdf(output_file)
+     print(f' ===== FINISHED script 1: Data reformatted and saved to: {output_file} =====')
  
 -- 
 2.43.0
