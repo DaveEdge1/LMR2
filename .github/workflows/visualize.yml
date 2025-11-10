@@ -152,15 +152,17 @@ jobs:
           # Create output directory
           mkdir -p "$OUTPUT_DIR"
 
+          # Run scripts from workspace root (not from presto-viz directory)
+          # This is important for multiprocessing to work correctly
+
           # Run script 1: Format data
-          cd presto-viz
-          python 1_format_data_daholocene_graphem.py "$DATA_DIR"
+          python presto-viz/1_format_data_daholocene_graphem.py "$DATA_DIR"
 
           # Run script 2: Make maps and time series
-          python 2_make_maps_and_ts.py "$DATA_DIR" "$OUTPUT_DIR"
+          python presto-viz/2_make_maps_and_ts.py "$DATA_DIR" "$OUTPUT_DIR"
 
           # Run script 3: Make HTML file (automatically commits to gh-pages)
-          python 3_make_html_file.py "$DATA_DIR" "$OUTPUT_DIR" "$WEB_ASSETS"
+          python presto-viz/3_make_html_file.py "$DATA_DIR" "$OUTPUT_DIR" "$WEB_ASSETS"
 
       # Upload output as artifact for reference
       - name: Upload visualization output
