@@ -166,7 +166,7 @@ ValueError: There are equal longitude coordinates (when wrapped)!
 
 This error occurs AFTER "Processing: 42/42" when generating regional time series.
 
-**Fix:** Wrap the `mask_3D` call and remove the last longitude point if it duplicates the first.
+**Fix:** Wrap the `mask_3D` call and remove the last longitude point if it duplicates the first. Also slice all spatial data arrays.
 
 **Line ~935:**
 ```python
@@ -179,10 +179,15 @@ try:
 except ValueError as e:
     if "equal longitude coordinates" in str(e):
         print(f'Warning: Longitude coordinates appear to wrap. Removing last point.')
-        lon_adjusted = lon[:-1]
-        mask_3D = ar6_all.mask_3D(lon_adjusted, lat)
-        # Also slice the spatial data to match
+        lon = lon[:-1]  # Update lon array itself
+
+        # Slice all spatial data arrays to match
         var_spatial_mean = var_spatial_mean[:,:,:,:-1]
+        var_spatial_lowerbound = var_spatial_lowerbound[:,:,:,:-1]
+        var_spatial_upperbound = var_spatial_upperbound[:,:,:,:-1]
+
+        # Now create mask with adjusted coordinates
+        mask_3D = ar6_all.mask_3D(lon, lat)
     else:
         raise
 ```
