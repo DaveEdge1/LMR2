@@ -10,6 +10,7 @@ There are **SIX bugs** in presto-viz that prevent CFR/LMR data from working:
 4. **Script 2 Bug 2a**: Missing CFR detection (causes NameError)
 5. **Script 2 Bug 2b**: Longitude cyclic point (causes ValueError)
 6. **Script 2 Bug 2c**: AR6 regionmask longitude wrapping (causes ValueError)
+7. **Script 2 Bug 2d**: Multiprocessing serialization with cartopy objects (causes struct.error)
 
 All must be fixed for visualization to work!
 
@@ -193,6 +194,39 @@ except ValueError as e:
 ```
 
 **Quick Apply:** See `presto-viz-script2-regionmask-fix.patch` in this repo.
+
+### Bug 2d: Multiprocessing Serialization with Cartopy (NEW)
+
+**Location: Pool creation** - Reduce worker processes to avoid pickle errors
+
+CFR/LMR data processing triggers serialization errors when using multiprocessing with cartopy objects:
+```
+struct.error: unpack requires a buffer of 352 bytes
+```
+
+This occurs because cartopy CRS objects, coastline features, and other cartographic objects don't serialize (pickle) well across process boundaries.
+
+**Quick Fix:** Reduce to single process (slower but works):
+
+```python
+# Change from:
+with Pool(processes=4, maxtasksperchild=20) as pool:
+
+# To:
+with Pool(processes=1, maxtasksperchild=20) as pool:
+```
+
+**Better Fix:** Use spawn method and simplify passed objects:
+
+```python
+# At top of script, after imports:
+import multiprocessing
+multiprocessing.set_start_method('spawn', force=True)
+```
+
+**Why:** The 'fork' method (default on Linux) can cause issues with complex objects. The 'spawn' method creates fresh processes but is more reliable.
+
+**Quick Apply:** See `presto-viz-script2-multiprocessing-fix.patch` in this repo.
 
 ---
 
