@@ -87,98 +87,12 @@ jobs:
           path: ./cfr-data/
           retention-days: 7
 
-  visualize-and-deploy:
-    name: Generate and Deploy Visualization
+  visualize:
+    name: Generate Presto Visualization
     needs: [find-latest-cfr-run, download-cfr-artifact]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      # Checkout LMR2 repository (target for deployment)
-      - name: Checkout LMR2 repository
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
-
-      # Checkout presto-viz as a tool
-      - name: Checkout presto-viz
-        uses: actions/checkout@v4
-        with:
-          repository: DaveEdge1/presto-viz
-          path: presto-viz
-
-      # Download the CFR data artifact
-      - name: Download CFR data
-        uses: actions/download-artifact@v4
-        with:
-          name: cfr-data-for-viz-${{ github.run_number }}
-          path: ./data/CFR_Run_${{ needs.find-latest-cfr-run.outputs.run_number }}_Reviz_${{ github.run_number }}
-
-      # Setup Python and dependencies
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install dependencies
-        run: |
-          pip install numpy xarray matplotlib cartopy regionmask bokeh netCDF4 pyyaml
-
-      - name: Pre-download Natural Earth data for cartopy
-        run: |
-          python -c "
-          import cartopy.feature as cfeature
-          print('Pre-downloading Natural Earth coastlines...')
-          # Force download of coastlines that script 2 will use
-          cfeature.COASTLINE
-          print('Natural Earth data cached successfully')
-          "
-
-      # Configure git for commits
-      - name: Configure git
-        run: |
-          git config user.name "GitHub Actions Bot"
-          git config user.email "actions@github.com"
-
-      # Run presto-viz with automatic GitHub Pages deployment
-      - name: Run presto-viz and deploy
-        env:
-          COMMIT_VIZ_OUTPUT: 'true'
-          GIT_REPO_ROOT: ${{ github.workspace }}
-          VIZ_OUTPUT_PATH: 'docs'
-          VIZ_GIT_BRANCH: 'gh-pages'
-          VIZ_COMMIT_MSG: "Deploy visualization from CFR run ${{ needs.find-latest-cfr-run.outputs.run_number }} (viz run ${{ github.run_number }})"
-        run: |
-          DATA_DIR="${{ github.workspace }}/data/CFR_Run_${{ needs.find-latest-cfr-run.outputs.run_number }}_Reviz_${{ github.run_number }}"
-          OUTPUT_DIR="${{ github.workspace }}/output/CFR_Run_${{ needs.find-latest-cfr-run.outputs.run_number }}_Reviz_${{ github.run_number }}"
-          WEB_ASSETS="${{ github.workspace }}/presto-viz/viz/web_assets/"
-
-          echo "Data directory: $DATA_DIR"
-          echo "Output directory: $OUTPUT_DIR"
-          echo "Web assets: $WEB_ASSETS"
-
-          # Create output directory
-          mkdir -p "$OUTPUT_DIR"
-
-          # Run scripts from workspace root (not from presto-viz directory)
-          # This is important for multiprocessing to work correctly
-
-          # Run script 1: Format data
-          python presto-viz/1_format_data_daholocene_graphem.py "$DATA_DIR"
-
-          # Run script 2: Make maps and time series
-          python presto-viz/2_make_maps_and_ts.py "$DATA_DIR" "$OUTPUT_DIR"
-
-          # Run script 3: Make HTML file (automatically commits to gh-pages)
-          python presto-viz/3_make_html_file.py "$DATA_DIR" "$OUTPUT_DIR" "$WEB_ASSETS"
-
-      # Upload output as artifact for reference
-      - name: Upload visualization output
-        uses: actions/upload-artifact@v4
-        with:
-          name: presto-viz-output-CFR_Run_${{ needs.find-latest-cfr-run.outputs.run_number }}_Reviz_${{ github.run_number }}
-          path: output/
-          retention-days: 30
-
+    # TODO: Switch to fix branch after applying fix to presto-viz - see .github/PRESTO_VIZ_FIX.md
+    # uses: DaveEdge1/presto-viz/.github/workflows/presto-viz-reusable.yml@fix/cfr-dimension-order
+    uses: DaveEdge1/presto-viz/.github/workflows/presto-viz-reusable.yml@main
+    with:
+      reconstruction_id: CFR_Run_${{ needs.find-latest-cfr-run.outputs.run_number }}_Reviz_${{ github.run_number }}
+      artifact_name: cfr-data-for-viz-${{ github.run_number }}
