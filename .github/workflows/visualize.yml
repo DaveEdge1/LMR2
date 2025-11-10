@@ -126,6 +126,16 @@ jobs:
         run: |
           pip install numpy xarray matplotlib cartopy regionmask bokeh netCDF4 pyyaml
 
+      - name: Pre-download Natural Earth data for cartopy
+        run: |
+          python -c "
+          import cartopy.feature as cfeature
+          print('Pre-downloading Natural Earth coastlines...')
+          # Force download of coastlines that script 2 will use
+          cfeature.COASTLINE
+          print('Natural Earth data cached successfully')
+          "
+
       # Configure git for commits
       - name: Configure git
         run: |
