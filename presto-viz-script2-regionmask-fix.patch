@@ -1,0 +1,31 @@
+--- a/2_make_maps_and_ts.py
++++ b/2_make_maps_and_ts.py
+@@ -935,7 +935,26 @@ Regional time series section:
+     else:
+         # Make a mask for the different regions
+-        mask_3D = ar6_all.mask_3D(lon,lat)
++        # Handle CFR/LMR data with wrapped longitude coordinates (0-360)
++        # regionmask fails if lon has duplicate values at boundaries
++        try:
++            mask_3D = ar6_all.mask_3D(lon, lat)
++        except ValueError as e:
++            if "equal longitude coordinates" in str(e):
++                # Remove the last longitude point if it's a duplicate of the first
++                # This happens when lon is [0, ..., 360] or [-180, ..., 180]
++                print(f'Warning: Longitude coordinates appear to wrap. Removing last point.')
++                print(f'  Original lon range: {lon[0]} to {lon[-1]} (n={len(lon)})')
++                lon = lon[:-1]
++                print(f'  Adjusted lon range: {lon[0]} to {lon[-1]} (n={len(lon)})')
++
++                # Also need to slice all spatial data arrays to match
++                var_spatial_mean = var_spatial_mean[:,:,:,:-1]
++                var_spatial_lowerbound = var_spatial_lowerbound[:,:,:,:-1]
++                var_spatial_upperbound = var_spatial_upperbound[:,:,:,:-1]
++
++                # Now create the mask with adjusted coordinates
++                mask_3D = ar6_all.mask_3D(lon, lat)
++            else:
++                raise
+
+         # Make a 2D lat/lon grid
+         lon_2d,lat_2d = np.meshgrid(lon,lat)

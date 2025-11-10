@@ -1,33 +1,25 @@
-From 2418f8f0265dc14ab2a939685f576f44f9c1b271 Mon Sep 17 00:00:00 2001
-From: "github-actions[bot]" <github-actions[bot]@users.noreply.github.com>
-Date: Wed, 5 Nov 2025 22:29:23 +0000
-Subject: [PATCH] Fix CFR/LMR data processing bugs in script 1
-
-The CFR/LMR data processing had multiple bugs:
-1. Incorrectly swapping time and ensemble dimensions
-2. Missing path separator when constructing output file path
-3. Using 'cfr' dataset name instead of 'lmr' (script 2 doesn't recognize 'cfr')
-
-Changes:
-- Remove unnecessary swapaxes operations for CFR data
-- Directly expand_dims to add method dimension
-- This produces correct shape: (method, ens, time) instead of (method, time, ens)
-- Now var_global_mean correctly averages ensemble members (axis=1)
-- Fix output_file path to use os.path.join() for proper path construction
-- Set dataset_txt = 'lmr' instead of 'cfr' to match script 2 expectations
-
-Fixes:
-- ValueError: conflicting sizes for dimension 'age'
-- FileNotFoundError: missing '/' separator in output path
-- NameError: Unknown dataset 'cfr', ref_period not defined
----
- 1_format_data_daholocene_graphem.py | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
-
-diff --git a/1_format_data_daholocene_graphem.py b/1_format_data_daholocene_graphem.py
-index 2bd5a2a..abc1234 100644
 --- a/1_format_data_daholocene_graphem.py
 +++ b/1_format_data_daholocene_graphem.py
+@@ -27,9 +27,9 @@ elif 'graph_em' in data_dir or any('graphem' in f.lower() for f in nc_files):
+ elif any('test-run' in f for f in nc_files) or os.path.exists(data_dir + 'test-run-graphem-cfg/'):
+     dataset_txt = 'graphem'
+     version_txt = data_dir.rstrip('/').split('/')[-1]
+     print(f"Detected: GraphEM reconstruction (via test-run)")
+ else:
+-    dataset_txt = 'cfr'
++    dataset_txt = 'lmr'
+     version_txt = data_dir.rstrip('/').split('/')[-1]
+     print(f"Detected: CFR/LMR2 reconstruction (treating as generic format)")
+
+@@ -65,7 +65,7 @@ if dataset_txt == 'graphem':
+     # ... graphem processing code ...
+
+ # CFR/LMR2 processing
+-if dataset_txt == 'cfr':
++if dataset_txt == 'lmr':
+     print("=== Processing CFR/LMR2 Reconstruction ===")
+
+     # Load the first NetCDF file
 @@ -172,12 +172,10 @@ if dataset_txt == 'cfr':
      if var_spatial_members.ndim == 3:  # (ens, lat, lon) - no time
          var_spatial_members = np.expand_dims(var_spatial_members, axis=1)  # Add time dimension
@@ -43,6 +35,17 @@ index 2bd5a2a..abc1234 100644
 
      var_global_mean = np.mean(var_global_members, axis=1)
 
+@@ -193,7 +191,7 @@ if dataset_txt == 'cfr':
+     ens_global = np.arange(var_global_members.shape[1]) + 1
+     notes = ['Processed from CFR/LMR2 output']
+
+-    # Get other metadata
+-    methods = ['CFR/LMR2']
++    # Get metadata
++    methods = ['LMR']
+     ens_spatial = np.arange(var_spatial_members.shape[1]) + 1
+     ens_global = np.arange(var_global_members.shape[1]) + 1
+     notes = ['Processed from CFR/LMR2 output']
 @@ -224,7 +222,7 @@ if dataset_txt == 'cfr':
      )
 
@@ -51,7 +54,3 @@ index 2bd5a2a..abc1234 100644
 +    output_file = os.path.join(data_dir, filename_txt + '.nc')
      data_xarray_output.to_netcdf(output_file)
      print(f' ===== FINISHED script 1: Data reformatted and saved to: {output_file} =====')
- 
--- 
-2.43.0
-
