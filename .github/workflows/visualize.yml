@@ -96,3 +96,76 @@ jobs:
     with:
       reconstruction_id: CFR_Run_${{ needs.find-latest-cfr-run.outputs.run_number }}_Reviz_${{ github.run_number }}
       artifact_name: cfr-data-for-viz-${{ github.run_number }}
+
+  deploy-to-github-pages:
+    name: Deploy to GitHub Pages
+    needs: [find-latest-cfr-run, visualize]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Download visualization artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: presto-viz-output-CFR_Run_${{ needs.find-latest-cfr-run.outputs.run_number }}_Reviz_${{ github.run_number }}
+          path: ./visualization-output
+
+      - name: List downloaded files
+        run: |
+          echo "Downloaded visualization files:"
+          ls -lah ./visualization-output/
+          find ./visualization-output -type f | head -20
+
+      - name: Setup deployment directory
+        run: |
+          # Create or switch to gh-pages branch
+          git fetch origin gh-pages 2>/dev/null || true
+          if git rev-parse --verify origin/gh-pages >/dev/null 2>&1; then
+            git checkout gh-pages
+            git pull origin gh-pages
+          else
+            git checkout --orphan gh-pages
+            git rm -rf . 2>/dev/null || true
+          fi
+
+          # Remove old files (keep .git)
+          find . -maxdepth 1 ! -name '.git' ! -name '.' -exec rm -rf {} + 2>/dev/null || true
+
+          # Copy visualization output
+          cp -r ./visualization-output/* ./ || cp -r visualization-output/* ./
+
+          # Create a README
+          cat > README.md << 'EOF'
+          # CFR Visualization
+
+          **Latest CFR Run**: ${{ needs.find-latest-cfr-run.outputs.run_number }}
+          **Visualization Run**: ${{ github.run_number }}
+          **Generated**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+          This is an automated deployment of Climate Field Reconstruction (CFR) visualization results.
+
+          View the visualization: [https://DaveEdge1.github.io/LMR2/](https://DaveEdge1.github.io/LMR2/)
+          EOF
+
+          # List what will be deployed
+          echo "Files to be deployed:"
+          ls -lah
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit and push
+        run: |
+          git add .
+          git commit -m "Deploy visualization from CFR run ${{ needs.find-latest-cfr-run.outputs.run_number }} (viz run ${{ github.run_number }})" || echo "No changes to commit"
+          git push origin gh-pages
+
