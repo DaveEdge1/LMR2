@@ -96,3 +96,96 @@ jobs:
     with:
       reconstruction_id: CFR_Run_${{ needs.find-latest-cfr-run.outputs.run_number }}_Reviz_${{ github.run_number }}
       artifact_name: cfr-data-for-viz-${{ github.run_number }}
+
+  deploy-to-pages:
+    name: Deploy Visualization to GitHub Pages
+    needs: [find-latest-cfr-run, visualize]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Download visualization output
+        uses: actions/download-artifact@v4
+        with:
+          name: presto-viz-output-CFR_Run_${{ needs.find-latest-cfr-run.outputs.run_number }}_Reviz_${{ github.run_number }}
+          path: ./viz-output
+
+      - name: Prepare docs directory
+        run: |
+          echo "Preparing docs directory for GitHub Pages..."
+          mkdir -p docs
+
+          # Copy visualization output to docs
+          cp -r ./viz-output/* docs/
+
+          # Create index redirect if main HTML exists
+          if [ -f "docs/index.html" ]; then
+            echo "Main index.html found"
+          else
+            echo "Creating index.html redirect to main visualization"
+            # Find the main HTML file (usually has the reconstruction ID in name)
+            MAIN_HTML=$(find docs -name "*.html" -type f | head -1)
+            if [ -n "$MAIN_HTML" ]; then
+              MAIN_HTML_NAME=$(basename "$MAIN_HTML")
+              cat > docs/index.html << EOF
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta http-equiv="refresh" content="0; url=./${MAIN_HTML_NAME}">
+            <title>CFR Visualization</title>
+          </head>
+          <body>
+            <p>Redirecting to <a href="./${MAIN_HTML_NAME}">visualization</a>...</p>
+          </body>
+          </html>
+          EOF
+            fi
+          fi
+
+          # List contents
+          echo "Contents of docs directory:"
+          ls -lah docs/
+
+      - name: Create README for Pages
+        run: |
+          cat > docs/README.md << EOF
+          # CFR Visualization Results
+
+          **Latest Run:** CFR Run ${{ needs.find-latest-cfr-run.outputs.run_number }}
+          **Visualization Run:** ${{ github.run_number }}
+          **Generated:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+          This directory contains the interactive visualization generated from the Latest Millennium Reanalysis (LMR) / Climate Field Reconstruction (CFR) results.
+
+          Visit the [visualization page](https://DaveEdge1.github.io/LMR2/) to view the results.
+          EOF
+
+      - name: Commit and push to gh-pages
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+
+          # Create or checkout gh-pages branch
+          git fetch origin gh-pages || git checkout --orphan gh-pages || git checkout gh-pages
+
+          # Remove old files
+          git rm -rf . || true
+
+          # Copy docs contents to root for gh-pages
+          cp -r docs/* .
+
+          # Add and commit
+          git add .
+          git commit -m "Deploy visualization from CFR run ${{ needs.find-latest-cfr-run.outputs.run_number }} (viz run ${{ github.run_number }})" || echo "No changes to commit"
+
+          # Push
+          git push origin gh-pages
+
