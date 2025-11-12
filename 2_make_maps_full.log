@@ -1,0 +1,187 @@
+Wed Nov 12 15:05:23 UTC 2025: Starting 2_make_maps
+/home/runner/work/LMR2/LMR2/presto-viz/2_make_maps_and_ts.py:122: SyntaxWarning: invalid escape sequence '\c'
+  if   var_units in ['degC','degrees Celsius']:   info_unit_txt = '$^\circ$C'; colorbar_unit_txt = '$^\circ$C';                html_unit_txt = '\u00B0C'
+/home/runner/work/LMR2/LMR2/presto-viz/2_make_maps_and_ts.py:122: SyntaxWarning: invalid escape sequence '\c'
+  if   var_units in ['degC','degrees Celsius']:   info_unit_txt = '$^\circ$C'; colorbar_unit_txt = '$^\circ$C';                html_unit_txt = '\u00B0C'
+ ===== STARTING script 2: Making maps and time series for lmr_vCFR_Run_17_Reviz_32_tas_annual =====
+Loading /home/runner/work/LMR2/LMR2/data/CFR_Run_17_Reviz_32/lmr_vCFR_Run_17_Reviz_32_tas_annual.nc
+Spatial bounds - Mean found
+ === Spatial shapes ===
+var_spatial_mean:       (1, 2001, 42, 63)
+var_spatial_lowerbound: (1, 2001, 42, 63)
+var_spatial_upperbound: (1, 2001, 42, 63)
+Global bounds - Mean found
+ === Global shapes ===
+var_global_mean_allmethods: (2001,)
+var_global_lowerbound:      (2001,)
+var_global_upperbound:      (2001,)
+Downloading file 'IPCC-WGI-reference-regions-v4.zip' from 'https://github.com/regionmask/regionmask/raw/v0.11.0/data/IPCC-WGI-reference-regions-v4.zip' to '/home/runner/.cache/regionmask/v0.11.0'.
+Step 1: Making maps and info panels. N=2001 each
+Pre-computing cyclic coordinates for all timesteps...
+Cyclic coordinate pre-computation complete
+Pre-transforming coordinates to target projection to avoid memory leak...
+Coordinate transformation complete
+Step 1: Making maps and info panels with parallel workers (4 processes)
+Prepared 2001 tasks, starting parallel processing...
+/usr/share/miniconda/envs/presto_env/lib/python3.12/site-packages/cartopy/io/__init__.py:241: DownloadWarning: Downloading: https://naturalearth.s3.amazonaws.com/50m_physical/ne_50m_coastline.zip
+  warnings.warn(f'Downloading: {url}', DownloadWarning)
+/usr/share/miniconda/envs/presto_env/lib/python3.12/site-packages/cartopy/io/__init__.py:241: DownloadWarning: Downloading: https://naturalearth.s3.amazonaws.com/50m_physical/ne_50m_coastline.zip
+  warnings.warn(f'Downloading: {url}', DownloadWarning)
+/usr/share/miniconda/envs/presto_env/lib/python3.12/site-packages/cartopy/io/__init__.py:241: DownloadWarning: Downloading: https://naturalearth.s3.amazonaws.com/50m_physical/ne_50m_coastline.zip
+  warnings.warn(f'Downloading: {url}', DownloadWarning)
+/usr/share/miniconda/envs/presto_env/lib/python3.12/site-packages/cartopy/io/__init__.py:241: DownloadWarning: Downloading: https://naturalearth.s3.amazonaws.com/50m_physical/ne_50m_coastline.zip
+  warnings.warn(f'Downloading: {url}', DownloadWarning)
+Completed 1/2001
+Completed 51/2001
+Completed 101/2001
+Completed 151/2001
+Completed 201/2001
+Completed 251/2001
+Completed 301/2001
+Completed 351/2001
+Completed 401/2001
+Completed 451/2001
+Completed 501/2001
+Completed 551/2001
+Completed 601/2001
+Completed 651/2001
+Completed 701/2001
+Completed 751/2001
+Completed 801/2001
+Completed 851/2001
+Completed 901/2001
+Completed 951/2001
+Completed 1001/2001
+Completed 1051/2001
+Completed 1101/2001
+Completed 1151/2001
+Completed 1201/2001
+Completed 1251/2001
+Completed 1301/2001
+Completed 1351/2001
+Completed 1401/2001
+Completed 1451/2001
+Completed 1501/2001
+Completed 1551/2001
+Completed 1601/2001
+Completed 1651/2001
+Completed 1701/2001
+Completed 1751/2001
+Completed 1801/2001
+Completed 1851/2001
+Completed 1901/2001
+Completed 1951/2001
+Completed 2001/2001
+All maps and info panels complete
+--- Skip factors for grid locations ---
+Lat: 1
+Lon: 1
+Original number of locations: 2646
+New number of locations:      2646
+Step 3: Making time series at selected points. N=2646
+Processing: 1/42
+Processing: 2/42
+Processing: 3/42
+Processing: 4/42
+Processing: 5/42
+Processing: 6/42
+Processing: 7/42
+Processing: 8/42
+Processing: 9/42
+Processing: 10/42
+Processing: 11/42
+Processing: 12/42
+Processing: 13/42
+Processing: 14/42
+Processing: 15/42
+Processing: 16/42
+Processing: 17/42
+Processing: 18/42
+Processing: 19/42
+Processing: 20/42
+Processing: 21/42
+Processing: 22/42
+Processing: 23/42
+Processing: 24/42
+Processing: 25/42
+Processing: 26/42
+Processing: 27/42
+Processing: 28/42
+Processing: 29/42
+Processing: 30/42
+Processing: 31/42
+Processing: 32/42
+Processing: 33/42
+Processing: 34/42
+Processing: 35/42
+Processing: 36/42
+Processing: 37/42
+Processing: 38/42
+Processing: 39/42
+Processing: 40/42
+Processing: 41/42
+Processing: 42/42
+Warning: Longitude coordinates appear to wrap. Removing last point.
+Step 4: Making time series for regions. N=58
+Processing: 1/58: GIC
+Processing: 2/58: NWN
+Processing: 3/58: NEN
+Processing: 4/58: WNA
+Processing: 5/58: CNA
+Processing: 6/58: ENA
+Processing: 7/58: NCA
+Processing: 8/58: SCA
+Processing: 9/58: CAR
+Processing: 10/58: NWS
+Processing: 11/58: NSA
+Processing: 12/58: NES
+Processing: 13/58: SAM
+Processing: 14/58: SWS
+Processing: 15/58: SES
+Processing: 16/58: SSA
+Processing: 17/58: NEU
+Processing: 18/58: WCE
+Processing: 19/58: EEU
+Processing: 20/58: MED
+Processing: 21/58: SAH
+Processing: 22/58: WAF
+Processing: 23/58: CAF
+Processing: 24/58: NEAF
+Processing: 25/58: SEAF
+Processing: 26/58: WSAF
+Processing: 27/58: ESAF
+Processing: 28/58: MDG
+Processing: 29/58: RAR
+Processing: 30/58: WSB
+Processing: 31/58: ESB
+Processing: 32/58: RFE
+Processing: 33/58: WCA
+Processing: 34/58: ECA
+Processing: 35/58: TIB
+Processing: 36/58: EAS
+Processing: 37/58: ARP
+Processing: 38/58: SAS
+Processing: 39/58: SEA
+Processing: 40/58: NAU
+Processing: 41/58: CAU
+Processing: 42/58: EAU
+Processing: 43/58: SAU
+Processing: 44/58: NZ
+Processing: 45/58: EAN
+Processing: 46/58: WAN
+Processing: 47/58: ARO
+Processing: 48/58: NPO
+Processing: 49/58: EPO
+Processing: 50/58: SPO
+Processing: 51/58: NAO
+Processing: 52/58: EAO
+Processing: 53/58: SAO
+Processing: 54/58: ARS
+Processing: 55/58: BOB
+Processing: 56/58: EIO
+Processing: 57/58: SIO
+Processing: 58/58: SOO
+ ===== FINISHED script 2: Making maps and time series saved to: /home/runner/work/LMR2/LMR2/output/CFR_Run_17_Reviz_32/viz/assets/lmr/ =====
+Total time: 19.71 minutes
+Wed Nov 12 15:25:07 UTC 2025: Script 2 exited with code: 0
+Wed Nov 12 15:25:07 UTC 2025: SUCCESS - Script 2 completed successfully

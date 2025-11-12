@@ -1,0 +1,10 @@
+=== Starting Script 2 with resource monitoring ===
+Memory before start:
+               total        used        free      shared  buff/cache   available
+Mem:            15Gi       1.1Gi       8.0Gi        47Mi       6.8Gi        14Gi
+Swap:          4.0Gi          0B       4.0Gi
+Script 2 exit code: 0
+Memory after completion:
+               total        used        free      shared  buff/cache   available
+Mem:            15Gi       928Mi       7.3Gi        49Mi       7.8Gi        14Gi
+Swap:          4.0Gi          0B       4.0Gi
