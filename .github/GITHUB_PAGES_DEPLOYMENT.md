@@ -20,7 +20,7 @@ The workflow has 4 jobs:
 1. Go to **Settings** → **Pages**
 2. Under **Source**, select:
    - Branch: **`gh-pages`**
-   - Folder: **`/ (root)`**
+   - Folder: **`/docs`**
 3. Click **Save**
 
 ### 2. Verify Workflow Permissions
