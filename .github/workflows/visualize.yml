@@ -155,6 +155,12 @@ jobs:
           echo "Copying visualization files from /tmp..."
           cp -r /tmp/visualization-output/* ./
 
+          # Rename 'viz' directory to 'docs' for GitHub Pages compatibility
+          if [ -d "viz" ]; then
+            echo "Renaming 'viz' directory to 'docs'..."
+            mv viz docs
+          fi
+
           # Create a README
           cat > README.md << 'EOF'
           # CFR Visualization
@@ -165,7 +171,7 @@ jobs:
 
           This is an automated deployment of Climate Field Reconstruction (CFR) visualization results.
 
-          View the visualization: [https://DaveEdge1.github.io/LMR2/](https://DaveEdge1.github.io/LMR2/)
+          View the visualization: [https://DaveEdge1.github.io/LMR2/docs/](https://DaveEdge1.github.io/LMR2/docs/)
           EOF
 
           # List what will be deployed
