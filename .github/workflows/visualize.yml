@@ -130,6 +130,12 @@ jobs:
           mv ./visualization-output /tmp/visualization-output
           echo "Files saved to /tmp/visualization-output"
 
+          # Remove zip files to avoid GitHub's 100MB file size limit
+          echo "Removing large zip files..."
+          find /tmp/visualization-output -type f -name "*.zip" -delete
+          echo "Remaining files for deployment:"
+          du -sh /tmp/visualization-output/*
+
       - name: Setup deployment directory
         run: |
           # Create or switch to gh-pages branch
