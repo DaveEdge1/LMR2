@@ -1,5 +1,5 @@
-Fri Nov 14 01:04:31 UTC 2025: Starting 1_format_data
-=== Analyzing data directory: /home/runner/work/LMR2/LMR2/data/CFR_Run_17_Reviz_35/ ===
+Sat Nov 15 01:03:30 UTC 2025: Starting 1_format_data
+=== Analyzing data directory: /home/runner/work/LMR2/LMR2/data/CFR_Run_17_Reviz_36/ ===
 Found 10 NetCDF files:
   - job_r09_recon.nc
   - job_r04_recon.nc
@@ -12,12 +12,12 @@ Found 10 NetCDF files:
   - job_r05_recon.nc
   - job_r06_recon.nc
 Detected: CFR/LMR2 reconstruction (treating as generic format)
- ===== STARTING script 1: Reformatting data for lmr_vCFR_Run_17_Reviz_35_tas_annual =====
+ ===== STARTING script 1: Reformatting data for lmr_vCFR_Run_17_Reviz_36_tas_annual =====
 === Processing CFR/LMR2 Reconstruction ===
-Loading: /home/runner/work/LMR2/LMR2/data/CFR_Run_17_Reviz_35/job_r09_recon.nc
+Loading: /home/runner/work/LMR2/LMR2/data/CFR_Run_17_Reviz_36/job_r09_recon.nc
 Dataset variables: ['tas_gm', 'tas_nhm', 'tas_shm', 'tas']
 Dataset dimensions: {'time': 2001, 'ens': 10, 'lat': 42, 'lon': 63}
-Warning: No config file found at /home/runner/work/LMR2/LMR2/data/CFR_Run_17_Reviz_35/configs.yml
+Warning: No config file found at /home/runner/work/LMR2/LMR2/data/CFR_Run_17_Reviz_36/configs.yml
 Maximum latitude bound is 92.1951219512195. Setting to 90
 Minimum latitude bound is -92.1951219512195. Setting to -90
 Variable shapes:
@@ -25,6 +25,6 @@ Variable shapes:
   var_spatial_mean: (1, 2001, 42, 63)
   var_global_members: (1, 1, 2001)
   var_global_mean: (1, 2001)
- ===== FINISHED script 1: Data reformatted and saved to: /home/runner/work/LMR2/LMR2/data/CFR_Run_17_Reviz_35/lmr_vCFR_Run_17_Reviz_35_tas_annual.nc =====
-Fri Nov 14 01:04:32 UTC 2025: Script 1 exited with code: 0
-Fri Nov 14 01:04:32 UTC 2025: SUCCESS - Script 1 completed successfully
+ ===== FINISHED script 1: Data reformatted and saved to: /home/runner/work/LMR2/LMR2/data/CFR_Run_17_Reviz_36/lmr_vCFR_Run_17_Reviz_36_tas_annual.nc =====
+Sat Nov 15 01:03:31 UTC 2025: Script 1 exited with code: 0
+Sat Nov 15 01:03:31 UTC 2025: SUCCESS - Script 1 completed successfully
