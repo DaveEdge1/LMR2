@@ -1,10 +1,10 @@
-Mon Nov 17 01:05:59 UTC 2025: Starting 2_make_maps
+Tue Nov 18 01:04:00 UTC 2025: Starting 2_make_maps
 /home/runner/work/LMR2/LMR2/presto-viz/2_make_maps_and_ts.py:122: SyntaxWarning: invalid escape sequence '\c'
   if   var_units in ['degC','degrees Celsius']:   info_unit_txt = '$^\circ$C'; colorbar_unit_txt = '$^\circ$C';                html_unit_txt = '\u00B0C'
 /home/runner/work/LMR2/LMR2/presto-viz/2_make_maps_and_ts.py:122: SyntaxWarning: invalid escape sequence '\c'
   if   var_units in ['degC','degrees Celsius']:   info_unit_txt = '$^\circ$C'; colorbar_unit_txt = '$^\circ$C';                html_unit_txt = '\u00B0C'
- ===== STARTING script 2: Making maps and time series for lmr_vCFR_Run_17_Reviz_38_tas_annual =====
-Loading /home/runner/work/LMR2/LMR2/data/CFR_Run_17_Reviz_38/lmr_vCFR_Run_17_Reviz_38_tas_annual.nc
+ ===== STARTING script 2: Making maps and time series for lmr_vCFR_Run_17_Reviz_39_tas_annual =====
+Loading /home/runner/work/LMR2/LMR2/data/CFR_Run_17_Reviz_39/lmr_vCFR_Run_17_Reviz_39_tas_annual.nc
 Spatial bounds - Mean found
  === Spatial shapes ===
 var_spatial_mean:       (1, 2001, 42, 63)
@@ -23,6 +23,12 @@ Pre-transforming coordinates to target projection to avoid memory leak...
 Coordinate transformation complete
 Step 1: Making maps and info panels with parallel workers (4 processes)
 Prepared 2001 tasks, starting parallel processing...
+/usr/share/miniconda/envs/presto_env/lib/python3.12/site-packages/cartopy/io/__init__.py:241: DownloadWarning: Downloading: https://naturalearth.s3.amazonaws.com/50m_physical/ne_50m_coastline.zip
+  warnings.warn(f'Downloading: {url}', DownloadWarning)
+/usr/share/miniconda/envs/presto_env/lib/python3.12/site-packages/cartopy/io/__init__.py:241: DownloadWarning: Downloading: https://naturalearth.s3.amazonaws.com/50m_physical/ne_50m_coastline.zip
+  warnings.warn(f'Downloading: {url}', DownloadWarning)
+/usr/share/miniconda/envs/presto_env/lib/python3.12/site-packages/cartopy/io/__init__.py:241: DownloadWarning: Downloading: https://naturalearth.s3.amazonaws.com/50m_physical/ne_50m_coastline.zip
+  warnings.warn(f'Downloading: {url}', DownloadWarning)
 /usr/share/miniconda/envs/presto_env/lib/python3.12/site-packages/cartopy/io/__init__.py:241: DownloadWarning: Downloading: https://naturalearth.s3.amazonaws.com/50m_physical/ne_50m_coastline.zip
   warnings.warn(f'Downloading: {url}', DownloadWarning)
 Completed 1/2001
@@ -175,7 +181,7 @@ Processing: 55/58: BOB
 Processing: 56/58: EIO
 Processing: 57/58: SIO
 Processing: 58/58: SOO
- ===== FINISHED script 2: Making maps and time series saved to: /home/runner/work/LMR2/LMR2/output/CFR_Run_17_Reviz_38/viz/assets/lmr/ =====
-Total time: 20.55 minutes
-Mon Nov 17 01:26:34 UTC 2025: Script 2 exited with code: 0
-Mon Nov 17 01:26:34 UTC 2025: SUCCESS - Script 2 completed successfully
+ ===== FINISHED script 2: Making maps and time series saved to: /home/runner/work/LMR2/LMR2/output/CFR_Run_17_Reviz_39/viz/assets/lmr/ =====
+Total time: 19.15 minutes
+Tue Nov 18 01:23:11 UTC 2025: Script 2 exited with code: 0
+Tue Nov 18 01:23:11 UTC 2025: SUCCESS - Script 2 completed successfully
