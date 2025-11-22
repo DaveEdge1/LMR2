@@ -1,10 +1,10 @@
-Fri Nov 21 01:03:57 UTC 2025: Starting 2_make_maps
+Sat Nov 22 01:02:00 UTC 2025: Starting 2_make_maps
 /home/runner/work/LMR2/LMR2/presto-viz/2_make_maps_and_ts.py:122: SyntaxWarning: invalid escape sequence '\c'
   if   var_units in ['degC','degrees Celsius']:   info_unit_txt = '$^\circ$C'; colorbar_unit_txt = '$^\circ$C';                html_unit_txt = '\u00B0C'
 /home/runner/work/LMR2/LMR2/presto-viz/2_make_maps_and_ts.py:122: SyntaxWarning: invalid escape sequence '\c'
   if   var_units in ['degC','degrees Celsius']:   info_unit_txt = '$^\circ$C'; colorbar_unit_txt = '$^\circ$C';                html_unit_txt = '\u00B0C'
- ===== STARTING script 2: Making maps and time series for lmr_vCFR_Run_17_Reviz_42_tas_annual =====
-Loading /home/runner/work/LMR2/LMR2/data/CFR_Run_17_Reviz_42/lmr_vCFR_Run_17_Reviz_42_tas_annual.nc
+ ===== STARTING script 2: Making maps and time series for lmr_vCFR_Run_17_Reviz_43_tas_annual =====
+Loading /home/runner/work/LMR2/LMR2/data/CFR_Run_17_Reviz_43/lmr_vCFR_Run_17_Reviz_43_tas_annual.nc
 Spatial bounds - Mean found
  === Spatial shapes ===
 var_spatial_mean:       (1, 2001, 42, 63)
@@ -181,7 +181,7 @@ Processing: 55/58: BOB
 Processing: 56/58: EIO
 Processing: 57/58: SIO
 Processing: 58/58: SOO
- ===== FINISHED script 2: Making maps and time series saved to: /home/runner/work/LMR2/LMR2/output/CFR_Run_17_Reviz_42/viz/assets/lmr/ =====
-Total time: 20.59 minutes
-Fri Nov 21 01:24:35 UTC 2025: Script 2 exited with code: 0
-Fri Nov 21 01:24:35 UTC 2025: SUCCESS - Script 2 completed successfully
+ ===== FINISHED script 2: Making maps and time series saved to: /home/runner/work/LMR2/LMR2/output/CFR_Run_17_Reviz_43/viz/assets/lmr/ =====
+Total time: 20.56 minutes
+Sat Nov 22 01:22:36 UTC 2025: Script 2 exited with code: 0
+Sat Nov 22 01:22:36 UTC 2025: SUCCESS - Script 2 completed successfully
