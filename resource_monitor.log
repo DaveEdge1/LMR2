@@ -6,5 +6,5 @@ Swap:          4.0Gi          0B       4.0Gi
 Script 2 exit code: 0
 Memory after completion:
                total        used        free      shared  buff/cache   available
-Mem:            15Gi       952Mi       3.8Gi        49Mi        11Gi        14Gi
+Mem:            15Gi       933Mi       3.9Gi        49Mi        11Gi        14Gi
 Swap:          4.0Gi          0B       4.0Gi
