@@ -72,7 +72,14 @@ filter_proxydb_args: []  # do not change this
 #===================================
 # Advanced
 #-----------------------------------
-proxydb_path: /app/PAGES2kV2.nc   # the nickname of the loaded proxy database fetch from the cloud, full URL 'PAGES2kv2': 'https://github.com/fzhu2e/cfr-data/raw/main/pages2kv2.json'
+# For custom LiPD data: specify the URL to download the source lipd.pkl file
+# The workflow will download and convert this to CFR-compatible format
+lipd_data_url: https://github.com/DaveEdge1/LMR2/raw/refs/heads/main/lipd.pkl
+
+# Path to proxy database inside Docker container (will be the converted DataFrame pickle)
+proxydb_path: /app/lipd_cfr.pkl   # For custom data workflow, this is the converted LiPD file
+# For standard workflow: /app/PAGES2kV2.nc
+
 assim_frac: 0.75  # the fraction of proxies to assimilate during each Monte-Carlo iteration
 recon_loc_rad: 25000  # the localization radius
 nens: 10   # ensemble size for the prior, reduced from 100 to 10 for GitHub Actions memory constraints
