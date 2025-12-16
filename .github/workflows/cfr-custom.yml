@@ -9,7 +9,6 @@ on:
     paths:
       - 'cfr_main_code.py'
       - 'lmr_configs.yml'
-      - 'convert_lipd_to_cfr_dataframe.py'
 
 env:
   IMAGE_NAME: davidedge/lmr2:latest
@@ -109,7 +108,7 @@ jobs:
 
     - name: List output files
       run: |
-        echo "Generated reconstruction files:"
+        echo "Generated files:"
         ls -lh ./recons/
 
     - name: Upload results as artifact
