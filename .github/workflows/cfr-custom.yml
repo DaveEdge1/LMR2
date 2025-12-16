@@ -1,4 +1,4 @@
-name: Run CFR with custom data
+name: Run CFR with custom LiPD data
 
 on:
   workflow_run:
@@ -14,7 +14,7 @@ env:
   IMAGE_NAME: davidedge/lmr2:latest
 
 jobs:
-  run-cfr:
+  run-cfr-custom:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -23,17 +23,61 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Download lipd_cfr.pkl
+    - name: Extract LiPD data URL from config
+      id: get_url
       run: |
-        python -m pip install --user gdown
-        python -m gdown 'http://143.198.98.66:83/customRecons/test123/lipd_cfr.pkl' -O "${GITHUB_WORKSPACE}/lipd_cfr.pkl"
+        # Extract lipd_data_url from lmr_configs.yml
+        LIPD_URL=$(python -c "
+        import yaml
+        with open('lmr_configs.yml', 'r') as f:
+            config = yaml.safe_load(f)
+        print(config.get('lipd_data_url', ''))
+        ")
 
-    - name: Verify lipd_cfr.pkl
+        if [ -z "$LIPD_URL" ]; then
+          echo "ERROR: lipd_data_url not found in lmr_configs.yml"
+          exit 1
+        fi
+
+        echo "lipd_url=$LIPD_URL" >> $GITHUB_OUTPUT
+        echo "LiPD data URL: $LIPD_URL"
+
+    - name: Download LiPD pickle file
       run: |
-        echo "Checking downloaded file:"
-        ls -lh "${GITHUB_WORKSPACE}/lipd_cfr.pkl" || (echo "lipd_cfr.pkl missing" && exit 1)
-        # optional quick sanity check (first bytes)
-        head -c 8 "${GITHUB_WORKSPACE}/lipd_cfr.pkl" | xxd -p || true
+        echo "Downloading LiPD data from: ${{ steps.get_url.outputs.lipd_url }}"
+        curl -L -o "${GITHUB_WORKSPACE}/lipd.pkl" "${{ steps.get_url.outputs.lipd_url }}"
+
+        echo "Verifying downloaded file:"
+        ls -lh "${GITHUB_WORKSPACE}/lipd.pkl"
+
+        # Check file is not empty and is actually a pickle file
+        if [ ! -s "${GITHUB_WORKSPACE}/lipd.pkl" ]; then
+          echo "ERROR: Downloaded file is empty"
+          exit 1
+        fi
+
+    - name: Install Python dependencies for conversion
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install pandas numpy
+
+    - name: Convert LiPD to CFR DataFrame format
+      run: |
+        echo "Converting LiPD pickle to CFR-compatible DataFrame pickle..."
+        python convert_lipd_to_cfr_dataframe.py lipd.pkl lipd_cfr.pkl
+
+        echo ""
+        echo "Conversion complete! Verifying output:"
+        ls -lh lipd_cfr.pkl
+
+        # Verify the converted file can be loaded
+        python -c "
+        import pandas as pd
+        df = pd.read_pickle('lipd_cfr.pkl')
+        print(f'✓ DataFrame loaded successfully: {df.shape[0]} proxies')
+        print(f'✓ Columns: {list(df.columns)}')
+        print(f'✓ Proxy types: {df[\"ptype\"].value_counts().to_dict()}')
+        "
 
     - name: Create swap space
       run: |
@@ -50,8 +94,9 @@ jobs:
     - name: Create output directory
       run: mkdir -p ./recons
 
-    - name: Run CFR analysis
+    - name: Run CFR analysis with custom data
       run: |
+        echo "Running CFR analysis with converted LiPD data..."
         docker run --rm \
           -v "${{ github.workspace }}/lipd_cfr.pkl":/app/lipd_cfr.pkl:ro \
           -v "${{ github.workspace }}/cfr_main_code.py":/app/cfr_main_code.py:ro \
@@ -69,9 +114,16 @@ jobs:
     - name: Upload results as artifact
       uses: actions/upload-artifact@v4
       with:
-        name: cfr-results-${{ github.run_number }}
+        name: cfr-custom-results-${{ github.run_number }}
         path: ./recons/
         retention-days: 30
+
+    - name: Upload converted data as artifact (optional)
+      uses: actions/upload-artifact@v4
+      with:
+        name: lipd-cfr-converted-${{ github.run_number }}
+        path: ./lipd_cfr.pkl
+        retention-days: 7
 
     - name: Commit results to repository (optional)
       if: github.event_name == 'push'
@@ -79,5 +131,5 @@ jobs:
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         git add recons/ || true
-        git diff --staged --quiet || git commit -m "Add CFR analysis results from run ${{ github.run_number }}"
+        git diff --staged --quiet || git commit -m "Add CFR custom data analysis results from run ${{ github.run_number }}"
         git push || echo "No changes to push"
