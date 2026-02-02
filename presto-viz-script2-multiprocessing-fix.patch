@@ -1,0 +1,19 @@
+--- a/2_make_maps_and_ts.py
++++ b/2_make_maps_and_ts.py
+@@ -xxx,x +xxx,x @@ Multiprocessing setup
++# Force use of 'spawn' method for multiprocessing to avoid pickle issues
++import multiprocessing
++multiprocessing.set_start_method('spawn', force=True)
++
+ from multiprocessing import Pool
+
+ # ... rest of imports ...
+
+@@ -xxx,x +xxx,x @@ Worker function
+-with Pool(processes=4, maxtasksperchild=20) as pool:
++# Reduce to single process to avoid serialization issues with cartopy objects
++# CFR/LMR data has compatibility issues with multiprocessing + cartopy
++with Pool(processes=1, maxtasksperchild=20) as pool:
+     for idx, result in enumerate(pool.imap(make_one_plot, all_args)):
+         if idx % 50 == 0:
+             print(f"Completed {idx+1}/{len(all_args)}")
