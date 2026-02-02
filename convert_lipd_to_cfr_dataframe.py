@@ -245,10 +245,11 @@ def main():
         # Convert LiPD to DataFrame
         df = convert_lipd_to_dataframe(input_path)
 
-        # Save as pickle
+        # Save as pickle with protocol 4 for better compatibility
         print("="*60)
         print(f"Saving DataFrame pickle: {output_path}")
-        df.to_pickle(output_path)
+        print(f"Using pickle protocol 4 for pandas version compatibility...")
+        df.to_pickle(output_path, protocol=4)
 
         # Verify the saved file
         print(f"Verifying saved file...")
