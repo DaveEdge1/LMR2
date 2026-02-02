@@ -194,10 +194,10 @@ def convert_lipd_to_dataframe(lipd_pkl_path):
 
         if record:
             records.append(record)
-            print(f"  ✓ {proxy_id}: {record['ptype']}, {len(record['time'])} points")
+            print(f"  [OK] {proxy_id}: {record['ptype']}, {len(record['time'])} points")
         else:
             skipped += 1
-            print(f"  ✗ {proxy_id}: missing data or extraction failed")
+            print(f"  [SKIP] {proxy_id}: missing data or extraction failed")
 
     print()
     print(f"Successfully extracted: {len(records)} proxies")
@@ -255,12 +255,12 @@ def main():
         df_test = pd.read_pickle(output_path)
 
         print()
-        print("✓ Successfully saved and verified!")
-        print(f"✓ Output file: {output_path}")
+        print("[OK] Successfully saved and verified!")
+        print(f"[OK] Output file: {output_path}")
 
         import os
         file_size_kb = os.path.getsize(output_path) / 1024
-        print(f"✓ File size: {file_size_kb:.1f} KB")
+        print(f"[OK] File size: {file_size_kb:.1f} KB")
         print()
         print("This file is ready to use with CFR!")
         print()
