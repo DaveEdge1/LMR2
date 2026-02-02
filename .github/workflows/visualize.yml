@@ -2,9 +2,6 @@ name: Visualize Latest CFR Results
 
 on:
   workflow_dispatch:
-  schedule:
-    # Optional: Run daily at midnight UTC to visualize latest results
-    - cron: '0 0 * * *'
 
 jobs:
   find-latest-cfr-run:
