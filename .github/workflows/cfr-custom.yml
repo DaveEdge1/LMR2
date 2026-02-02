@@ -23,6 +23,15 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Create swap space
+      run: |
+        sudo fallocate -l 5G /swapfile
+        sudo chmod 600 /swapfile
+        sudo mkswap /swapfile
+        sudo swapon /swapfile
+        sudo swapon --show
+        free -h
+
     - name: Extract LiPD data URL from config
       id: get_url
       run: |
@@ -78,15 +87,6 @@ jobs:
         print(f'✓ Columns: {list(df.columns)}')
         print(f'✓ Proxy types: {df[\"ptype\"].value_counts().to_dict()}')
         "
-
-    - name: Create swap space
-      run: |
-        sudo fallocate -l 5G /swapfile
-        sudo chmod 600 /swapfile
-        sudo mkswap /swapfile
-        sudo swapon /swapfile
-        sudo swapon --show
-        free -h
 
     - name: Pull Docker image
       run: docker pull ${{ env.IMAGE_NAME }}
