@@ -25,6 +25,7 @@ jobs:
 
     - name: Create swap space
       run: |
+        sudo swapoff -a
         sudo fallocate -l 5G /swapfile
         sudo chmod 600 /swapfile
         sudo mkswap /swapfile
