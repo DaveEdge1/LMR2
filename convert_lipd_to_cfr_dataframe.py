@@ -145,17 +145,20 @@ def extract_proxy_data(proxy_dict, proxy_id):
         else:
             ptype = f"{archive_type}.unknown"
 
-        # Construct CFR-compatible record
-        # Note: CFR expects PAGES2k-style column names
+        # Construct CFR-compatible record with exact PAGES2k column names
         return {
             'paleoData_pages2kID': proxy_id,
+            'dataSetName': proxy_id,  # Dataset name
+            'archiveType': archive_type,
             'geo_meanLat': float(lat) if lat is not None else np.nan,
             'geo_meanLon': float(lon) if lon is not None else np.nan,
             'geo_meanElev': 0.0,  # Default; LiPD may not always have elevation
-            'time': time_data,
-            'value': value_data,
-            'ptype': ptype,
-            'value_name': value_name if value_name else proxy_type
+            'year': time_data,  # CFR expects 'year' not 'time'
+            'paleoData_values': value_data,  # CFR expects 'paleoData_values' not 'value'
+            'paleoData_variableName': proxy_type if proxy_type else 'unknown',
+            'paleoData_units': 'permil' if 'd18O' in str(proxy_type).lower() or 'dD' in str(proxy_type) else 'unknown',
+            'paleoData_proxy': proxy_type if proxy_type else 'unknown',
+            'paleoData_ProxyObsType': ptype,  # Combined archive.proxy format
         }
 
     except Exception as e:
@@ -195,7 +198,7 @@ def convert_lipd_to_dataframe(lipd_pkl_path):
 
         if record:
             records.append(record)
-            print(f"  [OK] {proxy_id}: {record['ptype']}, {len(record['time'])} points")
+            print(f"  [OK] {proxy_id}: {record['paleoData_ProxyObsType']}, {len(record['year'])} points")
         else:
             skipped += 1
             print(f"  [SKIP] {proxy_id}: missing data or extraction failed")
@@ -215,16 +218,16 @@ def convert_lipd_to_dataframe(lipd_pkl_path):
     print(f"Columns: {list(df.columns)}")
     print()
     print("Proxy type distribution:")
-    print(df['ptype'].value_counts())
+    print(df['paleoData_ProxyObsType'].value_counts())
     print()
     print("Sample of first 3 proxies:")
     for idx in range(min(3, len(df))):
         row = df.iloc[idx]
         print(f"  {row['paleoData_pages2kID']}:")
-        print(f"    ptype: {row['ptype']}")
+        print(f"    proxy type: {row['paleoData_ProxyObsType']}")
         print(f"    lat/lon: {row['geo_meanLat']:.2f}, {row['geo_meanLon']:.2f}")
-        print(f"    time points: {len(row['time'])}")
-        print(f"    time range: {min(row['time']):.1f} - {max(row['time']):.1f}")
+        print(f"    time points: {len(row['year'])}")
+        print(f"    time range: {min(row['year']):.1f} - {max(row['year']):.1f}")
         print()
 
     return df

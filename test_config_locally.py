@@ -45,7 +45,7 @@ try:
     print(f"  [OK] Shape: {df.shape}")
     print(f"  [OK] Columns: {list(df.columns)}")
 
-    required_cols = ['paleoData_pages2kID', 'geo_meanLat', 'geo_meanLon', 'time', 'value', 'ptype']
+    required_cols = ['paleoData_pages2kID', 'geo_meanLat', 'geo_meanLon', 'year', 'paleoData_values', 'paleoData_ProxyObsType']
     missing_cols = [col for col in required_cols if col not in df.columns]
 
     if missing_cols:
@@ -55,7 +55,8 @@ try:
 
     print()
     print("  Proxy type distribution:")
-    for ptype, count in df['ptype'].value_counts().items():
+    proxy_col = 'paleoData_ProxyObsType' if 'paleoData_ProxyObsType' in df.columns else 'ptype'
+    for ptype, count in df[proxy_col].value_counts().items():
         print(f"    {ptype}: {count}")
 
     print()
@@ -65,10 +66,10 @@ try:
 
     # Check if any proxies match the filters
     matched = 0
-    for ptype in df['ptype'].unique():
+    for ptype in df[proxy_col].unique():
         archive_type = ptype.split('.')[0] if '.' in ptype else ptype
         if archive_type in filter_keys:
-            count = (df['ptype'].str.startswith(archive_type)).sum()
+            count = (df[proxy_col].str.startswith(archive_type)).sum()
             matched += count
             print(f"      {archive_type}: {count} proxies will be used")
 
