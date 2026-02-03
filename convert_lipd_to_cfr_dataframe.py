@@ -146,8 +146,9 @@ def extract_proxy_data(proxy_dict, proxy_id):
             ptype = f"{archive_type}.unknown"
 
         # Construct CFR-compatible record
+        # Note: CFR expects 'paleoData_pages2kID' as the proxy ID column name
         return {
-            'pid': proxy_id,
+            'paleoData_pages2kID': proxy_id,
             'lat': float(lat) if lat is not None else np.nan,
             'lon': float(lon) if lon is not None else np.nan,
             'elev': 0.0,  # Default; LiPD may not always have elevation
@@ -219,7 +220,7 @@ def convert_lipd_to_dataframe(lipd_pkl_path):
     print("Sample of first 3 proxies:")
     for idx in range(min(3, len(df))):
         row = df.iloc[idx]
-        print(f"  {row['pid']}:")
+        print(f"  {row['paleoData_pages2kID']}:")
         print(f"    ptype: {row['ptype']}")
         print(f"    lat/lon: {row['lat']:.2f}, {row['lon']:.2f}")
         print(f"    time points: {len(row['time'])}")
