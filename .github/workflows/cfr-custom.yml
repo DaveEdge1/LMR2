@@ -23,15 +23,15 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Create swap space
-      run: |
-        sudo swapoff -a
-        sudo fallocate -l 5G /swapfile
-        sudo chmod 600 /swapfile
-        sudo mkswap /swapfile
-        sudo swapon /swapfile
-        sudo swapon --show
-        free -h
+#    - name: Create swap space
+#      run: |
+#        sudo swapoff -a
+#        sudo fallocate -l 5G /swapfile
+#        sudo chmod 600 /swapfile
+#        sudo mkswap /swapfile
+#        sudo swapon /swapfile
+#        sudo swapon --show
+#        free -h
 
     - name: Extract LiPD data URL from config
       id: get_url
