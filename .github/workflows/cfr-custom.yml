@@ -45,8 +45,8 @@ jobs:
         ")
 
         if [ -z "$LIPD_URL" ]; then
-          echo "ERROR: lipd_data_url not found in lmr_configs.yml"
-          exit 1
+          echo "No lipd_data_url configured yet — skipping (repo just created)"
+          exit 0   # was: exit 1
         fi
 
         echo "lipd_url=$LIPD_URL" >> $GITHUB_OUTPUT
