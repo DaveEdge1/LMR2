@@ -103,6 +103,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pages: write
 
     steps:
       - name: Checkout repository
@@ -188,4 +189,17 @@ jobs:
           git add .
           git commit -m "Deploy visualization from CFR run ${{ needs.find-latest-cfr-run.outputs.run_number }} (viz run ${{ github.run_number }})" || echo "No changes to commit"
           git push origin gh-pages
+
+      - name: Enable GitHub Pages (if not already enabled)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${{ github.repository }}/pages" \
+            -f "source[branch]=gh-pages" \
+            -f "source[path]=/" \
+            2>/dev/null && echo "GitHub Pages enabled" \
+            || echo "GitHub Pages already configured"
 
