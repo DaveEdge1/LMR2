@@ -102,104 +102,35 @@ jobs:
     needs: [find-latest-cfr-run, visualize]
     runs-on: ubuntu-latest
     permissions:
-      contents: write
       pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
-
       - name: Download visualization artifact
         uses: actions/download-artifact@v4
         with:
           name: presto-viz-output-CFR_Run_${{ needs.find-latest-cfr-run.outputs.run_number }}_Reviz_${{ github.run_number }}
           path: ./visualization-output
 
-      - name: List downloaded files
+      - name: Prepare Pages content
         run: |
-          echo "Downloaded visualization files:"
+          find ./visualization-output -type f -name "*.zip" -delete
+          if [ -d "visualization-output/viz" ]; then
+            mv visualization-output/viz visualization-output/docs
+          fi
           ls -lah ./visualization-output/
-          find ./visualization-output -type f | head -20
 
-      - name: Save visualization files before git checkout
-        run: |
-          # Move visualization files to /tmp to preserve them during git checkout
-          echo "Moving visualization files to temporary location..."
-          mv ./visualization-output /tmp/visualization-output
-          echo "Files saved to /tmp/visualization-output"
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
-          # Remove zip files to avoid GitHub's 100MB file size limit
-          echo "Removing large zip files..."
-          find /tmp/visualization-output -type f -name "*.zip" -delete
-          echo "Remaining files for deployment:"
-          du -sh /tmp/visualization-output/*
+      - name: Upload artifact to Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./visualization-output
 
-      - name: Setup deployment directory
-        run: |
-          # Create or switch to gh-pages branch
-          git fetch origin gh-pages 2>/dev/null || true
-          if git rev-parse --verify origin/gh-pages >/dev/null 2>&1; then
-            git checkout gh-pages
-            git pull origin gh-pages
-          else
-            git checkout --orphan gh-pages
-            git rm -rf . 2>/dev/null || true
-          fi
-
-          # Remove old files (keep .git)
-          find . -maxdepth 1 ! -name '.git' ! -name '.' -exec rm -rf {} + 2>/dev/null || true
-
-          # Copy visualization output from temporary location
-          echo "Copying visualization files from /tmp..."
-          cp -r /tmp/visualization-output/* ./
-
-          # Rename 'viz' directory to 'docs' for GitHub Pages compatibility
-          if [ -d "viz" ]; then
-            echo "Renaming 'viz' directory to 'docs'..."
-            mv viz docs
-          fi
-
-          # Create a README
-          cat > README.md << 'EOF'
-          # CFR Visualization
-
-          **Latest CFR Run**: ${{ needs.find-latest-cfr-run.outputs.run_number }}
-          **Visualization Run**: ${{ github.run_number }}
-          **Generated**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
-
-          This is an automated deployment of Climate Field Reconstruction (CFR) visualization results.
-
-          View the visualization: [https://DaveEdge1.github.io/LMR2/docs/](https://DaveEdge1.github.io/LMR2/docs/)
-          EOF
-
-          # List what will be deployed
-          echo "Files to be deployed:"
-          ls -lah
-
-      - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Commit and push
-        run: |
-          git add .
-          git commit -m "Deploy visualization from CFR run ${{ needs.find-latest-cfr-run.outputs.run_number }} (viz run ${{ github.run_number }})" || echo "No changes to commit"
-          git push origin gh-pages
-
-      - name: Enable GitHub Pages (if not already enabled)
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh api \
-            --method POST \
-            -H "Accept: application/vnd.github+json" \
-            "/repos/${{ github.repository }}/pages" \
-            -f "source[branch]=gh-pages" \
-            -f "source[path]=/" \
-            2>/dev/null && echo "GitHub Pages enabled" \
-            || echo "GitHub Pages already configured"
-
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
