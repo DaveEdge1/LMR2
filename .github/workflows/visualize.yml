@@ -121,6 +121,7 @@ jobs:
           if [ -d "visualization-output/viz" ]; then
             mv visualization-output/viz visualization-output/docs
           fi
+          echo '<meta http-equiv="refresh" content="0; url=docs/visualizer.html">' > ./visualization-output/index.html 
           ls -lah ./visualization-output/
 
       - name: Setup Pages
