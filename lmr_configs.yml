@@ -74,7 +74,6 @@ filter_proxydb_args: []  # do not change this
 #-----------------------------------
 # For custom LiPD data: specify the URL to download the source lipd.pkl file
 # The workflow will download and convert this to CFR-compatible format
-lipd_data_url: https://github.com/DaveEdge1/LMR2/raw/refs/heads/main/lipd.pkl
 
 # Path to proxy database inside Docker container (will be the converted DataFrame pickle)
 proxydb_path: /app/lipd_cfr.pkl   # For custom data workflow, this is the converted LiPD file
