@@ -3,7 +3,7 @@ name: LMR CFR Reconstruction
 on:
   push:
     paths:
-      - 'lmr_configs.yml'   # server commits this FIRST; workflow pulls remaining files after a brief wait
+      - 'query_params.json'   # not in template; server commits this LAST so all files are present
   workflow_dispatch:
     inputs:
       unique_id:
@@ -30,16 +30,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # The push trigger fires on lmr_configs.yml (first server commit).
-      # Wait briefly and pull so query_params.json and README (subsequent commits) are present.
-      - name: Pull latest commits
-        run: |
-          sleep 10
-          git pull --rebase
-
       # Detect which pathway to use.
       # Priority order:
-      #   1. query_params.json in repo  — server-committed (pulled above)
+      #   1. query_params.json in repo  — server-committed (push trigger pathway)
       #   2. lipd_data_url input        — traditional pre-generated pickle
       #   3. lipd_query_json input      — manual workflow_dispatch
       - name: Detect data acquisition pathway
