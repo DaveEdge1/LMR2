@@ -86,7 +86,7 @@ jobs:
       # lipdGenerator outputs lipd.pkl already in CFR DataFrame format —
       # rename it directly to lipd_cfr.pkl and skip the convert step below.
       - name: Generate LiPD data from query
-        if: steps.pathway.outputs.pathway == 'github_actions' && steps.pathway.outputs.mode == 'filtered'
+        if: steps.pathway.outputs.mode != 'filtered'
         run: |
           echo "Querying lipdverse and generating data using lipdGenerator container..."
           mkdir -p lipd_output
