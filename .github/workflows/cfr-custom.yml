@@ -3,7 +3,7 @@ name: LMR CFR Reconstruction
 on:
   push:
     paths:
-      - 'lmr_configs.yml'   # server commits this last, after query_params.json
+      - 'query_params.json'   # server commits this LAST, after lmr_configs.yml is already updated
   workflow_dispatch:
     inputs:
       unique_id:
