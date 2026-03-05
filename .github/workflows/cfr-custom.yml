@@ -156,8 +156,8 @@ jobs:
         run: |
           echo "Running LMR CFR reconstruction..."
           docker run --rm \
-            -v $(pwd)/lmr_configs.yml:/lmr_configs.yml \
-            -v $(pwd)/lipd_cfr.pkl:/lipd_cfr.pkl \
+            -v $(pwd)/lmr_configs.yml:/app/lmr_configs.yml \
+            -v $(pwd)/lipd_cfr.pkl:/app/lipd_cfr.pkl \
             -v $(pwd)/recons:/recons \
             davidedge/lmr2:latest \
             python cfr_main_code.py
