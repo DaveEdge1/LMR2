@@ -1,138 +1,176 @@
-name: Run CFR with custom LiPD data
+name: LMR CFR Reconstruction
 
 on:
-  workflow_run:
-    workflows: ['docker-build']
-    types: [completed]
-  workflow_dispatch:
   push:
     paths:
-      - 'cfr_main_code.py'
-      - 'lmr_configs.yml'
-
-env:
-  IMAGE_NAME: davidedge/lmr2:latest
+      - 'lmr_configs.yml'   # server commits this last, after query_params.json
+  workflow_dispatch:
+    inputs:
+      unique_id:
+        description: 'Unique reconstruction ID'
+        required: true
+        type: string
+      lipd_data_url:
+        description: 'URL to pre-generated LiPD pickle (traditional pathway)'
+        required: false
+        type: string
+      lipd_query_json:
+        description: 'LiPD data query parameters for workflow generation (dispatch pathway)'
+        required: false
+        type: string
 
 jobs:
-  run-cfr-custom:
+  reconstruct:
     runs-on: ubuntu-latest
+    timeout-minutes: 240
     permissions:
       contents: write
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-#    - name: Create swap space
-#      run: |
-#        sudo swapoff -a
-#        sudo fallocate -l 5G /swapfile
-#        sudo chmod 600 /swapfile
-#        sudo mkswap /swapfile
-#        sudo swapon /swapfile
-#        sudo swapon --show
-#        free -h
+      # Detect which pathway to use.
+      # Priority order:
+      #   1. query_params.json in repo  — server-committed (push trigger pathway)
+      #   2. lipd_data_url input        — traditional pre-generated pickle
+      #   3. lipd_query_json input      — manual workflow_dispatch
+      - name: Detect data acquisition pathway
+        id: pathway
+        run: |
+          if [ -f "query_params.json" ]; then
+            echo "pathway=github_actions" >> $GITHUB_OUTPUT
+            MODE=$(jq -r '.mode' query_params.json)
+            echo "mode=$MODE" >> $GITHUB_OUTPUT
+            echo "Using query_params.json from repo (mode: $MODE)"
+          elif [ -n "${{ inputs.lipd_data_url }}" ]; then
+            echo "pathway=traditional" >> $GITHUB_OUTPUT
+            echo "Using traditional pathway: download from URL"
+          elif [ -n "${{ inputs.lipd_query_json }}" ]; then
+            echo "pathway=github_actions" >> $GITHUB_OUTPUT
+            echo '${{ inputs.lipd_query_json }}' > query_params.json
+            MODE=$(jq -r '.mode' query_params.json)
+            echo "mode=$MODE" >> $GITHUB_OUTPUT
+            echo "Using lipd_query_json input (mode: $MODE)"
+          else
+            echo "ERROR: No data source found (no query_params.json, no lipd_data_url, no lipd_query_json)"
+            exit 1
+          fi
 
-    - name: Extract LiPD data URL from config
-      id: get_url
-      run: |
-        # Extract lipd_data_url from lmr_configs.yml
-        LIPD_URL=$(python -c "
-        import yaml
-        with open('lmr_configs.yml', 'r') as f:
-            config = yaml.safe_load(f)
-        print(config.get('lipd_data_url', ''))
-        ")
+      # TRADITIONAL PATHWAY: Download from URL
+      - name: Download LiPD data from URL
+        if: steps.pathway.outputs.pathway == 'traditional'
+        run: |
+          echo "Downloading pre-generated LiPD data from: ${{ inputs.lipd_data_url }}"
+          curl -L "${{ inputs.lipd_data_url }}" -o lipd_data.pkl
+          ls -lh lipd_data.pkl
 
-        if [ -z "$LIPD_URL" ]; then
-          echo "No lipd_data_url configured yet — skipping (repo just created)"
-          exit 0   # was: exit 1
-        fi
+      # GITHUB ACTIONS PATHWAY - PATH A: Archived Compilation (direct download)
+      - name: Download archived compilation
+        if: steps.pathway.outputs.pathway == 'github_actions' && steps.pathway.outputs.mode == 'archived'
+        run: |
+          COMPILATION=$(jq -r '.compilation' query_params.json)
+          VERSION=$(jq -r '.version' query_params.json)
+          PICKLE_URL="https://lipdverse.org/${COMPILATION}/${VERSION}/${COMPILATION}${VERSION}.pkl"
 
-        echo "lipd_url=$LIPD_URL" >> $GITHUB_OUTPUT
-        echo "LiPD data URL: $LIPD_URL"
+          echo "Downloading archived compilation from: $PICKLE_URL"
+          curl -L -f "$PICKLE_URL" -o lipd_data.pkl || {
+            echo "ERROR: Failed to download archived compilation"
+            echo "URL: $PICKLE_URL"
+            exit 1
+          }
 
-    - name: Download LiPD pickle file
-      run: |
-        echo "Downloading LiPD data from: ${{ steps.get_url.outputs.lipd_url }}"
-        curl -L -o "${GITHUB_WORKSPACE}/lipd.pkl" "${{ steps.get_url.outputs.lipd_url }}"
+          ls -lh lipd_data.pkl
 
-        echo "Verifying downloaded file:"
-        ls -lh "${GITHUB_WORKSPACE}/lipd.pkl"
+      # GITHUB ACTIONS PATHWAY - PATH B: Filtered Query (lipdGenerator Docker)
+      - name: Generate LiPD data from query
+        if: steps.pathway.outputs.pathway == 'github_actions' && steps.pathway.outputs.mode == 'filtered'
+        run: |
+          echo "Querying lipdverse and generating data using lipdGenerator container..."
+          mkdir -p lipd_output
+          docker run --rm \
+            -v $(pwd)/query_params.json:/query_params.json:ro \
+            -v $(pwd)/lipd_output:/output \
+            davidedge/lipd_webapps:lipdGenerator /query_params.json /output all
 
-        # Check file is not empty and is actually a pickle file
-        if [ ! -s "${GITHUB_WORKSPACE}/lipd.pkl" ]; then
-          echo "ERROR: Downloaded file is empty"
-          exit 1
-        fi
+          if [ ! -f lipd_output/lipd.pkl ]; then
+            echo "ERROR: lipdGenerator did not produce lipd.pkl"
+            ls -la lipd_output/ || true
+            exit 1
+          fi
 
-#    - name: Create swap space
-#      run: |
-#        sudo fallocate -l 5G /swapfile
-#        sudo chmod 600 /swapfile
-#        sudo mkswap /swapfile
-#        sudo swapon /swapfile
-#        sudo swapon --show
-#        free -h
+          # Normalize filename to lipd_data.pkl (consistent with other pathways)
+          mv lipd_output/lipd.pkl lipd_data.pkl
+          ls -lh lipd_data.pkl
 
-    - name: Pull Docker image
-      run: docker pull ${{ env.IMAGE_NAME }}
+      # Verify pickle file exists (both paths)
+      - name: Verify LiPD data created
+        run: |
+          if [ -f lipd_data.pkl ]; then
+            echo "✓ LiPD data file created successfully"
+            FILE_SIZE=$(stat -c%s lipd_data.pkl 2>/dev/null || stat -f%z lipd_data.pkl)
+            echo "File size: $FILE_SIZE bytes"
+          else
+            echo "ERROR: LiPD data file not found"
+            exit 1
+          fi
 
-    - name: Create output directory
-      run: mkdir -p ./recons
+      - name: Pull Docker image
+        run: docker pull davidedge/lmr2:latest
 
-    - name: Convert LiPD to CFR format inside container
-      run: |
-        echo "Converting LiPD pickle to CFR-compatible DataFrame inside container..."
-        echo "This ensures pandas version compatibility!"
-        docker run --rm \
-          -v "${{ github.workspace }}/lipd.pkl":/app/lipd.pkl:ro \
-          -v "${{ github.workspace }}/convert_lipd_to_cfr_dataframe.py":/app/convert_lipd_to_cfr_dataframe.py:ro \
-          -v "${{ github.workspace }}":/output \
-          -w /app \
-          ${{ env.IMAGE_NAME }} \
-          conda run -n cfr-env python convert_lipd_to_cfr_dataframe.py lipd.pkl /output/lipd_cfr.pkl
+      - name: Create results directory
+        run: mkdir -p ./recons
 
-        echo ""
-        echo "Conversion complete! Verifying output:"
-        ls -lh "${{ github.workspace }}/lipd_cfr.pkl"
+      - name: Convert LiPD format
+        run: |
+          echo "Converting LiPD pickle to CFR DataFrame format..."
+          docker run --rm \
+            -v $(pwd)/lipd_data.pkl:/lipd_data.pkl \
+            -v $(pwd):/workspace \
+            davidedge/lmr2:latest \
+            python convert_lipd_to_cfr_dataframe.py
 
-    - name: Run CFR analysis with custom data
-      run: |
-        echo "Running CFR analysis with converted LiPD data..."
-        docker run --rm \
-          -v "${{ github.workspace }}/lipd_cfr.pkl":/app/lipd_cfr.pkl:ro \
-          -v "${{ github.workspace }}/cfr_main_code.py":/app/cfr_main_code.py:ro \
-          -v "${{ github.workspace }}/lmr_configs.yml":/app/lmr_configs.yml:ro \
-          -v "${{ github.workspace }}/recons":/app/recons \
-          -w /app \
-          ${{ env.IMAGE_NAME }} \
-          conda run -n cfr-env python cfr_main_code.py
+      - name: Verify CFR data created
+        run: |
+          if [ -f lipd_cfr.pkl ]; then
+            echo "CFR data file created successfully"
+            ls -lh lipd_cfr.pkl
+          else
+            echo "ERROR: CFR data file not created"
+            exit 1
+          fi
 
-    - name: List output files
-      run: |
-        echo "Generated files:"
-        ls -lh ./recons/
+      - name: Run CFR reconstruction
+        run: |
+          echo "Running LMR CFR reconstruction..."
+          docker run --rm \
+            -v $(pwd)/lmr_configs.yml:/lmr_configs.yml \
+            -v $(pwd)/lipd_cfr.pkl:/lipd_cfr.pkl \
+            -v $(pwd)/recons:/recons \
+            davidedge/lmr2:latest \
+            python cfr_main_code.py
 
-    - name: Upload results as artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: cfr-custom-results-${{ github.run_number }}
-        path: ./recons/
-        retention-days: 30
+      - name: Verify reconstruction results
+        run: |
+          if [ -d ./recons ] && [ "$(ls -A ./recons)" ]; then
+            echo "Reconstruction completed successfully"
+            ls -lh ./recons/
+          else
+            echo "ERROR: No reconstruction results generated"
+            exit 1
+          fi
 
-    - name: Upload converted data as artifact (optional)
-      uses: actions/upload-artifact@v4
-      with:
-        name: lipd-cfr-converted-${{ github.run_number }}
-        path: ./lipd_cfr.pkl
-        retention-days: 7
+      - name: Upload reconstruction results
+        uses: actions/upload-artifact@v4
+        with:
+          name: lmr-reconstruction-${{ inputs.unique_id || github.run_id }}
+          path: ./recons/
+          retention-days: 90
 
-    - name: Commit results to repository (optional)
-      if: github.event_name == 'push'
-      run: |
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        git add recons/ || true
-        git diff --staged --quiet || git commit -m "Add CFR custom data analysis results from run ${{ github.run_number }}"
-        git push || echo "No changes to push"
+      - name: Commit results to repository
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add recons/
+          git diff --staged --quiet || git commit -m "Add LMR reconstruction results for ${{ inputs.unique_id || github.run_id }}"
+          git push
