@@ -83,8 +83,8 @@ jobs:
           ls -lh lipd_data.pkl
 
       # GITHUB ACTIONS PATHWAY - PATH B: Filtered Query (lipdGenerator Docker)
-      # lipdGenerator outputs lipd.pkl already in CFR DataFrame format —
-      # rename it directly to lipd_cfr.pkl and skip the convert step below.
+      # lipdGenerator produces lipd_legacy.pkl (raw LiPD dict) which the convert step
+      # below turns into the CFR-compatible DataFrame format — same as archived/traditional.
       - name: Generate LiPD data from query
         if: steps.pathway.outputs.pathway == 'github_actions' && steps.pathway.outputs.mode == 'filtered'
         run: |
@@ -95,30 +95,24 @@ jobs:
             -v $(pwd)/lipd_output:/output \
             davidedge/lipd_webapps:lipdGenerator /query_params.json /output all
 
-          if [ ! -f lipd_output/lipd.pkl ]; then
-            echo "ERROR: lipdGenerator did not produce lipd.pkl"
+          if [ ! -f lipd_output/lipd_legacy.pkl ]; then
+            echo "ERROR: lipdGenerator did not produce lipd_legacy.pkl"
             ls -la lipd_output/ || true
             exit 1
           fi
 
-          # lipdGenerator already produces a CFR-format DataFrame — use it directly
-          mv lipd_output/lipd.pkl lipd_cfr.pkl
-          ls -lh lipd_cfr.pkl
+          # Use the legacy LiPD dict pickle — convert step below produces lipd_cfr.pkl
+          cp lipd_output/lipd_legacy.pkl lipd_data.pkl
+          ls -lh lipd_data.pkl
 
-      # Verify data file exists (lipd_data.pkl for archived/traditional,
-      # lipd_cfr.pkl for filtered — which skips the convert step)
+      # Verify lipd_data.pkl exists before convert step
       - name: Verify LiPD data created
         run: |
-          if [ -f lipd_cfr.pkl ]; then
-            echo "LiPD data (CFR format) ready"
-            FILE_SIZE=$(stat -c%s lipd_cfr.pkl 2>/dev/null || stat -f%z lipd_cfr.pkl)
-            echo "File size: $FILE_SIZE bytes"
-          elif [ -f lipd_data.pkl ]; then
-            echo "LiPD data (raw format) ready — convert step will run"
+          if [ -f lipd_data.pkl ]; then
             FILE_SIZE=$(stat -c%s lipd_data.pkl 2>/dev/null || stat -f%z lipd_data.pkl)
-            echo "File size: $FILE_SIZE bytes"
+            echo "LiPD data ready: $FILE_SIZE bytes"
           else
-            echo "ERROR: No LiPD data file found"
+            echo "ERROR: No LiPD data file found (lipd_data.pkl)"
             exit 1
           fi
 
@@ -128,10 +122,9 @@ jobs:
       - name: Create results directory
         run: mkdir -p ./recons
 
-      # Convert step only needed for archived/traditional pathways.
-      # Filtered path already produces lipd_cfr.pkl via lipdGenerator.
+      # Convert raw LiPD dict pickle → CFR-compatible DataFrame pickle.
+      # Runs for all pathways (filtered, archived, traditional).
       - name: Convert LiPD format
-        if: steps.pathway.outputs.mode != 'filtered'
         run: |
           echo "Converting LiPD pickle to CFR DataFrame format..."
           docker run --rm \
@@ -156,7 +149,7 @@ jobs:
         run: |
           echo "Running LMR CFR reconstruction..."
           docker run --rm \
-            -v $(pwd)/lmr_configs.yml:/app/lmr_configs.yml \
+            -v $(pwd)/lmr_configs.yml:/app/user_config.yml \
             -v $(pwd)/lipd_cfr.pkl:/app/lipd_cfr.pkl \
             -v $(pwd)/recons:/recons \
             davidedge/lmr2:latest \
