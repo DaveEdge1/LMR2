@@ -20,11 +20,14 @@ on:
         type: string
 
 jobs:
-  reconstruct:
+  # ── Job 1: Acquire and convert proxy data ─────────────────────────────────
+  # Uploads lipd_cfr.pkl as an artifact so Job 2 can be re-run independently
+  # when only the CFR reconstruction step needs debugging.
+  prepare-data:
     runs-on: ubuntu-latest
-    timeout-minutes: 240
+    timeout-minutes: 200
     permissions:
-      contents: write
+      contents: read
 
     steps:
       - name: Checkout repository
@@ -83,8 +86,6 @@ jobs:
           ls -lh lipd_data.pkl
 
       # GITHUB ACTIONS PATHWAY - PATH B: Filtered Query (lipdGenerator Docker)
-      # lipdGenerator produces lipd_legacy.pkl (raw LiPD dict) which the convert step
-      # below turns into the CFR-compatible DataFrame format — same as archived/traditional.
       - name: Generate LiPD data from query
         if: steps.pathway.outputs.pathway == 'github_actions' && steps.pathway.outputs.mode == 'filtered'
         run: |
@@ -101,11 +102,9 @@ jobs:
             exit 1
           fi
 
-          # Use the legacy LiPD dict pickle — convert step below produces lipd_cfr.pkl
           cp lipd_output/lipd_legacy.pkl lipd_data.pkl
           ls -lh lipd_data.pkl
 
-      # Verify lipd_data.pkl exists before convert step
       - name: Verify LiPD data created
         run: |
           if [ -f lipd_data.pkl ]; then
@@ -119,11 +118,7 @@ jobs:
       - name: Pull Docker image
         run: docker pull davidedge/lmr2:latest
 
-      - name: Create results directory
-        run: mkdir -p ./recons
-
       # Convert raw LiPD dict pickle → CFR-compatible DataFrame pickle.
-      # Runs for all pathways (filtered, archived, traditional).
       - name: Convert LiPD format
         run: |
           echo "Converting LiPD pickle to CFR DataFrame format..."
@@ -145,12 +140,45 @@ jobs:
             exit 1
           fi
 
+      - name: Upload CFR data artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lipd-cfr-data-${{ inputs.unique_id || github.run_id }}
+          path: lipd_cfr.pkl
+          retention-days: 7
+
+  # ── Job 2: Run CFR reconstruction ─────────────────────────────────────────
+  # Re-run this job alone (via "Re-run failed jobs") when only CFR config
+  # changes are needed — no need to redo the 20-min data generation.
+  reconstruct:
+    needs: prepare-data
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download CFR data artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: lipd-cfr-data-${{ inputs.unique_id || github.run_id }}
+
+      - name: Pull Docker image
+        run: docker pull davidedge/lmr2:latest
+
+      - name: Create results directory
+        run: mkdir -p ./recons
+
       - name: Run CFR reconstruction
         run: |
           echo "Running LMR CFR reconstruction..."
           docker run --rm \
-            -v $(pwd)/lmr_configs.yml:/app/user_config.yml \
-            -v $(pwd)/lipd_cfr.pkl:/app/lipd_cfr.pkl \
+            -v $(pwd)/cfr_main_code.py:/app/cfr_main_code.py:ro \
+            -v $(pwd)/lmr_configs.yml:/app/user_config.yml:ro \
+            -v $(pwd)/lipd_cfr.pkl:/app/lipd_cfr.pkl:ro \
             -v $(pwd)/recons:/recons \
             davidedge/lmr2:latest \
             python cfr_main_code.py
