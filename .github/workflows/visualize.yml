@@ -3,7 +3,7 @@ name: Visualize Latest CFR Results
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["Run CFR with custom LiPD data"]
+    workflows: ["LMR CFR Reconstruction"]
     types: [completed]
 
 jobs:
@@ -40,7 +40,7 @@ jobs:
               exit 1
             fi
 
-            artifact_name="cfr-custom-results-${run_number}"
+            artifact_name="lmr-reconstruction-${run_id}"
             echo "run_id=$run_id" >> $GITHUB_OUTPUT
             echo "run_number=$run_number" >> $GITHUB_OUTPUT
             echo "artifact_name=$artifact_name" >> $GITHUB_OUTPUT
