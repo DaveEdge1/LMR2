@@ -193,6 +193,11 @@ jobs:
             exit 1
           fi
 
+      - name: Combine seed runs into combined_recon.nc
+        run: |
+          echo "Combining all seed runs into combined_recon.nc for visualization..."
+          docker run --rm             -v $(pwd)/combine_seeds.py:/app/combine_seeds.py:ro             -v $(pwd)/recons:/recons             davidedge/lmr2:latest             python /app/combine_seeds.py
+
       - name: Upload reconstruction results
         uses: actions/upload-artifact@v4
         with:
