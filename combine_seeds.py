@@ -30,12 +30,17 @@ tas_gm_list = []
 for f in files:
     # chunks= enables dask lazy loading; data stays on disk until written
     ds = xr.open_dataset(f, chunks={'time': CHUNK_TIME})
-    tas_list.append(ds['tas'])     # (time, lat, lon)
-    tas_gm_list.append(ds['tas_gm'])  # (time, ens_per_seed)
+    tas_list.append(ds['tas'])     # (time, lat, lon) — no ens dim
+
+    # Each file's tas_gm has ens=[0..nens-1].  Concatenating multiple files
+    # with identical ens coordinate values triggers xarray's duplicate-index
+    # check.  Drop the coordinate so xarray builds a clean RangeIndex instead.
+    # Script 1 accesses .values only, so coordinate labels don't matter.
+    tas_gm_list.append(ds['tas_gm'].drop_vars('ens'))
 
 # tas: concat creates (n_seeds, time, lat, lon); transpose to (time, n_seeds, lat, lon)
 tas    = xr.concat(tas_list,    dim='ens').transpose('time', 'ens', 'lat', 'lon')
-# tas_gm: concat along existing ens dim → (time, total_ens)
+# tas_gm: concat along unlabelled ens dim → (time, total_ens)
 tas_gm = xr.concat(tas_gm_list, dim='ens')
 
 # to_netcdf streams chunks to disk without materialising the full array
