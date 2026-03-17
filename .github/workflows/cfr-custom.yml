@@ -24,7 +24,7 @@ jobs:
   # Uploads lipd_cfr.pkl as an artifact so Job 2 can be re-run independently
   # when only the CFR reconstruction step needs debugging.
   prepare-data:
-    runs-on: ubuntu-latest-8-core
+    runs-on: ubuntu-latest
     timeout-minutes: 200
     permissions:
       contents: read
@@ -152,7 +152,7 @@ jobs:
   # changes are needed — no need to redo the 20-min data generation.
   reconstruct:
     needs: prepare-data
-    runs-on: ubuntu-latest-8-core
+    runs-on: ubuntu-latest
     timeout-minutes: 240
     permissions:
       contents: write
