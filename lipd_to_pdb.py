@@ -280,26 +280,41 @@ def main():
         print("\nExtracting time series via pylipd get_timeseries() ...")
         result = L.get_timeseries(all_ds)
 
-        # pylipd may return (ts_list, df) or just a DataFrame depending on version
-        if isinstance(result, tuple):
+        # Normalise whatever get_timeseries() returns into a flat list of dicts.
+        # pylipd API has varied across versions:
+        #   - dict  {dataset_name: [ts, ...]}   (observed in pylipd 1.5.x)
+        #   - tuple (ts_list, df)
+        #   - list  [ts, ...]
+        #   - DataFrame
+        rows = []
+        if isinstance(result, dict):
+            for val in result.values():
+                if isinstance(val, list):
+                    rows.extend(val)
+                elif val is not None:
+                    rows.append(val)
+        elif isinstance(result, tuple):
             ts_list, df = result
-        else:
-            df = result
-            ts_list = None
+            if ts_list and isinstance(ts_list, list):
+                rows = ts_list
+            elif df is not None and hasattr(df, 'iterrows'):
+                rows = [r.to_dict() for _, r in df.iterrows()]
+        elif isinstance(result, list):
+            rows = result
+        elif hasattr(result, 'iterrows'):
+            rows = [r.to_dict() for _, r in result.iterrows()]
 
-        # Prefer the list of dicts (ts_list); fall back to DataFrame rows
-        if ts_list is not None and len(ts_list) > 0:
-            rows = ts_list
-            print(f"Got {len(rows)} time series (from ts_list)")
-        elif df is not None and hasattr(df, '__len__') and len(df) > 0:
-            rows = [row.to_dict() if hasattr(row, 'to_dict') else dict(row)
-                    for _, row in df.iterrows()]
-            print(f"Got {len(rows)} time series (from DataFrame)")
-        else:
+        # Each row may be a TimeSeries object — coerce to plain dict
+        rows = [r.to_dict() if hasattr(r, 'to_dict') else
+                (dict(r) if not isinstance(r, dict) else r)
+                for r in rows]
+
+        if not rows:
             raise RuntimeError(
                 "get_timeseries() returned no rows — check pylipd version "
                 "and that .lpd files were loaded correctly"
             )
+        print(f"Got {len(rows)} time series")
 
         # Print available keys from first row for diagnostics
         if rows:
