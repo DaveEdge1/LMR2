@@ -14,13 +14,12 @@ import sys
 import os
 import re
 import math
-import pickle
 import zipfile
 import tempfile
 
 import numpy as np
+import pandas as pd
 from pylipd.lipd import LiPD
-import cfr
 
 
 # ── Proxy type mapping ────────────────────────────────────────────────────────
@@ -322,10 +321,10 @@ def main():
                            if not str(rows[0].get(k, '')).startswith('[')]
             print(f"Sample row keys: {sample_keys[:30]}")
 
-    # ── Build ProxyDatabase ───────────────────────────────────────────────────
-    pdb    = cfr.ProxyDatabase()
-    n_ok   = 0
-    n_skip = 0
+    # ── Build DataFrame (cfr.ProxyDatabase.fetch expects pd.read_pickle → from_df) ──
+    df_rows = []
+    n_ok    = 0
+    n_skip  = 0
 
     for row in rows:
         vname = str(row.get('paleoData_variableName') or '').strip()
@@ -377,32 +376,22 @@ def main():
         archive  = str(row.get('archiveType') or row.get('archive') or '')
         ptype    = create_ptype(archive, std_name)
 
-        # Seasonality
-        seasonality = convert_seasonality(
-            row.get('paleoData_seasonality') or row.get('paleoData_interpretation_seasonality'),
-            lat
-        )
-
         # Record ID
         pid = str(row.get('TSID') or row.get('paleoData_TSID') or
                   row.get('dataSetName') or f'record_{n_ok}')
 
-        try:
-            record = cfr.ProxyRecord(
-                pid=pid,
-                lat=lat, lon=lon, elev=elev,
-                time=time_arr,
-                value=val_arr,
-                ptype=ptype,
-                seasonality=seasonality,
-                value_name=vname,
-                value_unit=str(row.get('paleoData_units') or 'unknown'),
-            )
-            pdb   += record
-            n_ok  += 1
-        except Exception as e:
-            print(f"  Warning: ProxyRecord failed for {pid}: {e}")
-            n_skip += 1
+        df_rows.append({
+            'paleoData_pages2kID':    pid,
+            'geo_meanLat':            lat,
+            'geo_meanLon':            lon,
+            'geo_meanElev':           elev,
+            'year':                   time_arr,
+            'paleoData_values':       val_arr,
+            'ptype':                  ptype,
+            'paleoData_variableName': vname,
+            'paleoData_units':        str(row.get('paleoData_units') or 'unknown'),
+        })
+        n_ok += 1
 
     print(f"\nProxy records: {n_ok} added, {n_skip} skipped")
 
@@ -411,17 +400,16 @@ def main():
             "No proxy records were added — check paleoData structure and time key names"
         )
 
+    df = pd.DataFrame(df_rows)
+
     # Ptype breakdown
-    ptypes = {}
-    for pid, rec in pdb.records.items():
-        ptypes[rec.ptype] = ptypes.get(rec.ptype, 0) + 1
+    ptypes = df['ptype'].value_counts()
     print("\nProxy type breakdown:")
-    for pt, cnt in sorted(ptypes.items()):
+    for pt, cnt in ptypes.items():
         print(f"  {pt:<40} {cnt:>4} records")
 
-    print(f"\nSaving ProxyDatabase to {output_path} ...")
-    with open(output_path, 'wb') as fh:
-        pickle.dump(pdb, fh, protocol=4)
+    print(f"\nSaving proxy DataFrame to {output_path} ...")
+    df.to_pickle(output_path)
     print("Done.")
 
 
