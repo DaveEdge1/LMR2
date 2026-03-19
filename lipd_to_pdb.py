@@ -2,8 +2,9 @@
 """
 Convert LiPD zip archive to cfr.ProxyDatabase pickle.
 
-Parses .lpd files directly as ZIP archives containing JSON-LD metadata.
-No SPARQL or RDF ontology dependencies — works with any pylipd version.
+Uses pylipd's built-in get_timeseries() to extract proxy records from the
+RDF graph (avoids writing custom SPARQL with fragile property paths), then
+maps the flat time-series dicts to cfr.ProxyRecord objects.
 
 Usage:
     python lipd_to_pdb.py <lipd_files.zip> <output_lipd_cfr.pkl>
@@ -15,10 +16,10 @@ import re
 import math
 import pickle
 import zipfile
-import json
 import tempfile
 
 import numpy as np
+from pylipd.lipd import LiPD
 import cfr
 
 
@@ -74,46 +75,43 @@ PTYPE_MAP = {
 }
 
 ARCHIVE_DEFAULTS = {
-    'tree':             'tree.TRW',
-    'wood':             'tree.TRW',
-    'coral':            'coral.d18O',
-    'ice core':         'ice.d18O',
-    'glacierice':       'ice.d18O',
-    'lake sediment':    'lake.other',
-    'lakesediment':     'lake.other',
-    'marine sediment':  'marine.other',
-    'marinesediment':   'marine.other',
-    'speleothem':       'speleothem.d18O',
-    'borehole':         'borehole',
-    'documents':        'documents',
-    'sclerosponge':     'sclerosponge.d18O',
-    'bivalve':          'bivalve.d18O',
-    'molluskshell':     'bivalve.d18O',
-    'hybrid':           'hybrid',
-    'peat':             'lake.other',
-    'terrestrialsediment': 'lake.other',
+    'tree':                 'tree.TRW',
+    'wood':                 'tree.TRW',
+    'coral':                'coral.d18O',
+    'ice core':             'ice.d18O',
+    'glacierice':           'ice.d18O',
+    'lake sediment':        'lake.other',
+    'lakesediment':         'lake.other',
+    'marine sediment':      'marine.other',
+    'marinesediment':       'marine.other',
+    'speleothem':           'speleothem.d18O',
+    'borehole':             'borehole',
+    'documents':            'documents',
+    'sclerosponge':         'sclerosponge.d18O',
+    'bivalve':              'bivalve.d18O',
+    'molluskshell':         'bivalve.d18O',
+    'hybrid':               'hybrid',
+    'peat':                 'lake.other',
+    'terrestrialsediment':  'lake.other',
 }
 
 
 def create_ptype(archive_type, standard_name):
-    arch = str(archive_type or '').lower().strip().replace(' ', '')
+    arch = str(archive_type or '').lower().strip()
     std  = str(standard_name  or '').lower().strip()
-    # Try exact match with spaces removed from archive
-    for (a, s), ptype in PTYPE_MAP.items():
-        a_norm = a.replace(' ', '')
-        if a_norm == arch and s == std:
-            return ptype
-    # Original space-aware lookup
-    arch_sp = str(archive_type or '').lower().strip()
-    key = (arch_sp, std)
+    arch_nsp = arch.replace(' ', '')
+    key = (arch, std)
     if key in PTYPE_MAP:
         return PTYPE_MAP[key]
-    # Partial match: same archive, standard_name contains a known key
+    # Also try with spaces removed from archive
     for (a, s), ptype in PTYPE_MAP.items():
-        a_norm = a.replace(' ', '')
-        if (a == arch_sp or a_norm == arch) and s and s in std:
+        if a.replace(' ', '') == arch_nsp and s == std:
             return ptype
-    return ARCHIVE_DEFAULTS.get(arch_sp, ARCHIVE_DEFAULTS.get(arch, f'{arch_sp}.unknown'))
+    # Partial match on std name
+    for (a, s), ptype in PTYPE_MAP.items():
+        if (a == arch or a.replace(' ', '') == arch_nsp) and s and s in std:
+            return ptype
+    return ARCHIVE_DEFAULTS.get(arch, ARCHIVE_DEFAULTS.get(arch_nsp, f'{arch}.unknown'))
 
 
 # ── Seasonality conversion ────────────────────────────────────────────────────
@@ -124,7 +122,6 @@ MONTH_ABBR = {
     'june': 6, 'july': 7, 'august': 8, 'september': 9,
     'october': 10, 'november': 11, 'december': 12,
 }
-
 ANNUAL = list(range(1, 13))
 
 
@@ -136,15 +133,14 @@ def convert_seasonality(seasonality_str, latitude=None):
         return ANNUAL
 
     nh = (latitude is None) or (float(latitude) >= 0)
-
     named = {
-        'summer':         [6, 7, 8]         if nh else [12, 1, 2],
-        'winter':         [12, 1, 2]        if nh else [6, 7, 8],
-        'spring':         [3, 4, 5]         if nh else [9, 10, 11],
-        'fall':           [9, 10, 11]       if nh else [3, 4, 5],
-        'autumn':         [9, 10, 11]       if nh else [3, 4, 5],
-        'warm season':    [6, 7, 8]         if nh else [12, 1, 2],
-        'cold season':    [12, 1, 2]        if nh else [6, 7, 8],
+        'summer':         [6, 7, 8]           if nh else [12, 1, 2],
+        'winter':         [12, 1, 2]          if nh else [6, 7, 8],
+        'spring':         [3, 4, 5]           if nh else [9, 10, 11],
+        'fall':           [9, 10, 11]         if nh else [3, 4, 5],
+        'autumn':         [9, 10, 11]         if nh else [3, 4, 5],
+        'warm season':    [6, 7, 8]           if nh else [12, 1, 2],
+        'cold season':    [12, 1, 2]          if nh else [6, 7, 8],
         'growing season': [4, 5, 6, 7, 8, 9] if nh else [10, 11, 12, 1, 2, 3],
         'djf': [12, 1, 2], 'mam': [3, 4, 5], 'jja': [6, 7, 8], 'son': [9, 10, 11],
     }
@@ -165,310 +161,96 @@ def convert_seasonality(seasonality_str, latitude=None):
 
     if s in MONTH_ABBR:
         return [MONTH_ABBR[s]]
-
     return ANNUAL
 
 
-def time_to_year_ce(arr, var_name):
+def time_to_year_ce(arr, var_name, std_name=''):
     """Convert time axis to year CE. Age BP → 1950 − age; age ka → 1950 − age*1000."""
     v = str(var_name or '').lower()
-    if 'ka' in v:
+    s = str(std_name  or '').lower()
+    if 'ka' in v or 'ka' in s:
         return 1950.0 - arr * 1000.0
-    if 'age' in v or 'bp' in v:
+    if 'age' in v or 'age' in s or 'bp' in v or 'bp' in s:
         return 1950.0 - arr
     return arr  # already year CE
 
 
-# ── LiPD JSON helpers ─────────────────────────────────────────────────────────
-# Variable names that indicate a time axis
-_TIME_LOWER = {
+# ── Time-series dict helpers ──────────────────────────────────────────────────
+# Variable names that are time axes (not proxy data)
+_TIME_VARS = {
     'year', 'age', 'yearce', 'agebp', 'ageka', 'yearad', 'year_ad', 'year_bp',
     'age_bp', 'age_ka', 'years', 'ages', 'time', 'yearrounded', 'yearb2k',
-    'ybp', 'ka', 'yearensemble', 'ageoriginal', 'agemedian', 'agebchron',
-    'agecopra', 'agebacon', 'agelinreg', 'agelininterp', 'ageoxcal',
+    'ybp', 'ka', 'yearensemble', 'agemedian', 'agebchron', 'agecopra',
+    'agebacon', 'agelinreg', 'agelininterp', 'ageoxcal', 'ageoriginal',
 }
 
-# Variables that are metadata / non-proxy
-_SKIP_LOWER = {
-    'depth', 'depthtop', 'depthbottom', 'depthcomposite',
-    'section', 'core', 'sampleid', 'notes', 'material',
-    'deletethis', 'needstobechanged', 'latitude', 'longitude', 'elevation',
+# Variables that are metadata / depth / uncertainty — skip as proxy
+_SKIP_VARS = {
+    'depth', 'depthtop', 'depthbottom', 'depthcomposite', 'section',
+    'core', 'sampleid', 'notes', 'material', 'deletethis',
+    'needstobechanged', 'latitude', 'longitude', 'elevation',
+    'uncertainty', 'uncertaintylow', 'uncertaintyhigh',
 }
 
 
-def _is_time(vname):
-    v = vname.strip().lower().replace(' ', '').replace('-', '').replace('_', '')
-    return (v in _TIME_LOWER or v.startswith('age') or v.startswith('year'))
+def _is_time_var(vname):
+    v = str(vname or '').strip().lower().replace(' ', '').replace('-', '').replace('_', '')
+    return v in _TIME_VARS or v.startswith('age') or v.startswith('year')
 
 
-def _is_skip(vname):
-    v = vname.strip().lower()
-    return v in _SKIP_LOWER or v.startswith('depth') or v.startswith('uncertainty')
+def _is_skip_var(vname):
+    v = str(vname or '').strip().lower()
+    return v in _SKIP_VARS or v.startswith('depth') or v.startswith('uncertainty')
 
 
-def _str(val):
-    """Flatten a possibly-nested {name: ...} JSON-LD object to a plain string."""
+def _to_float_array(val):
     if val is None:
-        return ''
-    if isinstance(val, str):
-        return val.strip()
-    if isinstance(val, dict):
-        for k in ('name', '@value', 'label', '@id'):
-            if k in val:
-                s = val[k]
-                if isinstance(s, str):
-                    return s.strip()
-                if isinstance(s, dict):
-                    return _str(s)
-    return str(val).strip()
+        return None
+    try:
+        arr = np.array(list(val) if not isinstance(val, (list, np.ndarray)) else val, dtype=float)
+        if arr.ndim == 0 or arr.size == 0 or not np.any(np.isfinite(arr)):
+            return None
+        return arr
+    except (TypeError, ValueError):
+        return None
 
 
-def _get_values(col, lpd_zip):
+def _get_time_from_row(row):
     """
-    Extract a numeric numpy array from a column dict.
-    Handles inline 'values'/'hasValues' lists and external CSV files.
+    Extract the time array and its variable name from a pylipd ts row dict.
+
+    pylipd's get_timeseries() stores the co-located time axis as top-level
+    keys (e.g. 'age', 'year') alongside paleoData_* proxy keys.
     """
-    vals = col.get('values') or col.get('hasValues')
-    if vals is not None and vals != 'None' and vals != '':
-        try:
-            arr = np.array(list(vals) if not isinstance(vals, list) else vals, dtype=float)
-            if arr.ndim > 0 and arr.size > 0 and np.any(np.isfinite(arr)):
-                return arr
-        except (TypeError, ValueError):
-            pass
+    # Priority: year-like keys first (already in year CE), then age-like
+    for key in ('year', 'yearCE', 'yearAD', 'Year', 'yearRounded',
+                'age', 'ageBP', 'ageKa', 'Age'):
+        val = row.get(key)
+        if val is not None:
+            arr = _to_float_array(val)
+            if arr is not None:
+                return arr, key
 
-    # External CSV (values stored in a separate file inside the ZIP)
-    fname = col.get('filename')
-    if fname:
-        try:
-            with lpd_zip.open(fname) as f:
-                content = f.read().decode('utf-8', errors='replace')
-            lines = [ln.strip() for ln in content.splitlines() if ln.strip()]
-            if len(lines) < 2:
-                return None
-            col_idx = max(0, int(col.get('number', 1)) - 1)
-            vals_out = []
-            for line in lines[1:]:  # skip header row
-                parts = line.split(',')
-                try:
-                    cell = parts[col_idx].strip() if col_idx < len(parts) else ''
-                    vals_out.append(float(cell) if cell and cell.lower() != 'nan' else float('nan'))
-                except ValueError:
-                    vals_out.append(float('nan'))
-            if vals_out:
-                return np.array(vals_out, dtype=float)
-        except Exception as e:
-            pass
+    # Fall back to time_values + time_variableName
+    tv  = row.get('time_values') or row.get('paleoData_time_values')
+    tvn = row.get('time_variableName', '')
+    if tv is not None:
+        arr = _to_float_array(tv)
+        if arr is not None:
+            return arr, str(tvn)
 
-    return None
+    return None, ''
 
 
-def _get_geo(data):
-    """Extract (lat, lon, elev) from a LiPD dataset dict with multiple fallbacks."""
-    lat = lon = elev = 0.0
-    geo = data.get('geo') or data.get('collectedFrom') or {}
-
-    # GeoJSON format: coordinates = [lon, lat, elev?]
-    geom = geo.get('geometry', {}) if isinstance(geo, dict) else {}
-    if isinstance(geom, dict):
-        coords = geom.get('coordinates')
-        if isinstance(coords, (list, tuple)) and len(coords) >= 2:
+def _get_scalar(row, *keys, default=0.0):
+    for k in keys:
+        v = row.get(k)
+        if v is not None:
             try:
-                lon = float(coords[0])
-                lat = float(coords[1])
-                if len(coords) >= 3 and coords[2] is not None:
-                    elev = float(coords[2])
-                return lat, lon, elev
+                return float(v)
             except (TypeError, ValueError):
                 pass
-
-    # Properties dict (may be nested or flat)
-    if isinstance(geo, dict):
-        props = geo.get('properties') or geo
-        if not isinstance(props, dict):
-            props = geo
-
-        for k in ('meanLat', 'latitude', 'lat', 'wgs84:lat'):
-            if k in props:
-                try: lat = float(props[k]); break
-                except: pass
-        for k in ('meanLon', 'longitude', 'lon', 'long', 'wgs84:long'):
-            if k in props:
-                try: lon = float(props[k]); break
-                except: pass
-        for k in ('meanElev', 'elevation', 'elev', 'altitude', 'alt', 'wgs84:alt'):
-            if k in props:
-                try: elev = float(props[k]); break
-                except: pass
-
-    return lat, lon, elev
-
-
-def _get_archive(data):
-    """Extract archive type string from a LiPD dataset dict."""
-    for key in ('proxyArchiveType', 'archiveType', 'archive'):
-        val = data.get(key)
-        if val:
-            s = _str(val)
-            if s:
-                return s.lower().strip()
-    return ''
-
-
-def _iter_columns(paleo_data):
-    """
-    Yield (column_dict) for every measurement column across all paleoData tables.
-    Handles both list and dict forms of measurementTable / columns.
-    """
-    if isinstance(paleo_data, dict):
-        paleo_data = list(paleo_data.values())
-    for paleo in (paleo_data or []):
-        if not isinstance(paleo, dict):
-            continue
-        tables = paleo.get('measurementTable') or paleo.get('measurementTables') or []
-        if isinstance(tables, dict):
-            tables = list(tables.values())
-        elif not isinstance(tables, list):
-            tables = [tables]
-        for table in tables:
-            if not isinstance(table, dict):
-                continue
-            cols = table.get('columns') or []
-            if isinstance(cols, dict):
-                cols = list(cols.values())
-            yield from (c for c in cols if isinstance(c, dict))
-
-
-def _parse_lpd(lpd_path):
-    """
-    Parse a single .lpd file (ZIP archive containing JSON-LD + optional CSVs).
-    Returns list of dicts ready to become cfr.ProxyRecord objects.
-    """
-    records = []
-    try:
-        with zipfile.ZipFile(lpd_path, 'r') as lpd_zip:
-            names = lpd_zip.namelist()
-
-            # Find the main JSON/JSON-LD metadata file
-            def _rank(n):
-                n_lc = n.lower()
-                if n_lc.endswith('.jsonld'):
-                    return 0
-                if n_lc.endswith('.json') and 'bagit' not in n_lc and 'metadata' not in n_lc:
-                    return 1
-                if n_lc.endswith('.json'):
-                    return 2
-                return 99
-
-            json_files = sorted(
-                [n for n in names if n.lower().endswith(('.json', '.jsonld'))
-                 and not n.startswith('__')],
-                key=_rank
-            )
-            if not json_files:
-                return records
-
-            with lpd_zip.open(json_files[0]) as f:
-                data = json.load(f)
-
-            ds_name = _str(data.get('dataSetName')) or os.path.splitext(os.path.basename(lpd_path))[0]
-            lat, lon, elev = _get_geo(data)
-            archive = _get_archive(data)
-
-            # Group columns by their parent table (same JSON object → same table)
-            # We walk paleoData tables one at a time so time/proxy pairing is correct.
-            paleo_data = data.get('paleoData', [])
-            if isinstance(paleo_data, dict):
-                paleo_data = list(paleo_data.values())
-
-            for paleo in (paleo_data or []):
-                if not isinstance(paleo, dict):
-                    continue
-                tables = paleo.get('measurementTable') or paleo.get('measurementTables') or []
-                if isinstance(tables, dict):
-                    tables = list(tables.values())
-                elif not isinstance(tables, list):
-                    tables = [tables]
-
-                for table in tables:
-                    if not isinstance(table, dict):
-                        continue
-                    cols = table.get('columns') or []
-                    if isinstance(cols, dict):
-                        cols = list(cols.values())
-
-                    time_cols   = []
-                    proxy_cols  = []
-                    for col in cols:
-                        if not isinstance(col, dict):
-                            continue
-                        vname = _str(col.get('variableName'))
-                        if not vname:
-                            continue
-                        if _is_time(vname):
-                            time_cols.append((vname, col))
-                        elif not _is_skip(vname):
-                            proxy_cols.append((vname, col))
-
-                    if not time_cols or not proxy_cols:
-                        continue
-
-                    # Pick the best time column (prefer 'year' variants over 'age')
-                    time_arr  = None
-                    time_vname = ''
-                    for vn, tc in sorted(time_cols,
-                                         key=lambda x: (0 if 'year' in x[0].lower() else 1)):
-                        arr = _get_values(tc, lpd_zip)
-                        if arr is not None and np.any(np.isfinite(arr)):
-                            time_arr   = arr
-                            time_vname = vn
-                            break
-
-                    if time_arr is None:
-                        continue
-
-                    time_ce = time_to_year_ce(time_arr, time_vname)
-
-                    for vname, pc in proxy_cols:
-                        val_arr = _get_values(pc, lpd_zip)
-                        if val_arr is None:
-                            continue
-
-                        n = min(len(time_ce), len(val_arr))
-                        t, v = time_ce[:n], val_arr[:n]
-                        mask = np.isfinite(t) & np.isfinite(v)
-                        if not mask.any():
-                            continue
-                        t, v = t[mask], v[mask]
-                        idx = np.argsort(t)
-                        t, v = t[idx], v[idx]
-
-                        std_name   = _str(pc.get('standardVariable'))
-                        proxy      = _str(pc.get('proxy') or pc.get('proxyGeneral'))
-                        seasonality = _str(pc.get('seasonality'))
-                        units      = _str(pc.get('units')) or 'unknown'
-
-                        tsid = _str(pc.get('TSid') or pc.get('TSID') or pc.get('tsId'))
-                        if not tsid:
-                            tsid = f"{ds_name}.{vname}"
-
-                        ptype = create_ptype(archive, std_name or proxy or vname)
-                        seas  = convert_seasonality(seasonality, lat)
-
-                        records.append({
-                            'pid': tsid,
-                            'lat': lat, 'lon': lon, 'elev': elev,
-                            'time': t, 'value': v,
-                            'ptype': ptype,
-                            'seasonality': seas,
-                            'value_name': vname,
-                            'value_unit': units,
-                        })
-
-    except Exception as e:
-        print(f"  Warning: failed to parse {os.path.basename(lpd_path)}: {e}")
-
-    return records
+    return default
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -486,43 +268,133 @@ def main():
         print(f"\nUnzipping {zip_path} ...")
         with zipfile.ZipFile(zip_path, 'r') as zf:
             zf.extractall(tmpdir)
+        n_files = sum(1 for f in os.listdir(tmpdir) if f.endswith('.lpd'))
+        print(f"Extracted {n_files} .lpd files")
 
-        lpd_files = sorted(
-            os.path.join(tmpdir, f)
-            for f in os.listdir(tmpdir)
-            if f.lower().endswith('.lpd')
+        print("\nLoading with pylipd ...")
+        L = LiPD()
+        L.load_from_dir(tmpdir)
+        all_ds = L.get_all_dataset_names()
+        print(f"Loaded {len(all_ds)} datasets")
+
+        print("\nExtracting time series via pylipd get_timeseries() ...")
+        result = L.get_timeseries(all_ds)
+
+        # pylipd may return (ts_list, df) or just a DataFrame depending on version
+        if isinstance(result, tuple):
+            ts_list, df = result
+        else:
+            df = result
+            ts_list = None
+
+        # Prefer the list of dicts (ts_list); fall back to DataFrame rows
+        if ts_list is not None and len(ts_list) > 0:
+            rows = ts_list
+            print(f"Got {len(rows)} time series (from ts_list)")
+        elif df is not None and hasattr(df, '__len__') and len(df) > 0:
+            rows = [row.to_dict() if hasattr(row, 'to_dict') else dict(row)
+                    for _, row in df.iterrows()]
+            print(f"Got {len(rows)} time series (from DataFrame)")
+        else:
+            raise RuntimeError(
+                "get_timeseries() returned no rows — check pylipd version "
+                "and that .lpd files were loaded correctly"
+            )
+
+        # Print available keys from first row for diagnostics
+        if rows:
+            sample_keys = [k for k in rows[0].keys()
+                           if not str(rows[0].get(k, '')).startswith('[')]
+            print(f"Sample row keys: {sample_keys[:30]}")
+
+    # ── Build ProxyDatabase ───────────────────────────────────────────────────
+    pdb    = cfr.ProxyDatabase()
+    n_ok   = 0
+    n_skip = 0
+
+    for row in rows:
+        vname = str(row.get('paleoData_variableName') or '').strip()
+
+        # Skip time/depth/metadata variables
+        if not vname or _is_time_var(vname) or _is_skip_var(vname):
+            n_skip += 1
+            continue
+
+        # Proxy values
+        val_arr = _to_float_array(row.get('paleoData_values'))
+        if val_arr is None:
+            n_skip += 1
+            continue
+
+        # Time axis
+        time_raw, time_vname = _get_time_from_row(row)
+        if time_raw is None:
+            n_skip += 1
+            continue
+        time_arr = time_to_year_ce(time_raw, time_vname,
+                                    row.get('time_standardName', ''))
+
+        # Align, remove NaNs, sort ascending
+        n = min(len(time_arr), len(val_arr))
+        time_arr, val_arr = time_arr[:n], val_arr[:n]
+        mask = np.isfinite(time_arr) & np.isfinite(val_arr)
+        if not mask.any():
+            n_skip += 1
+            continue
+        time_arr, val_arr = time_arr[mask], val_arr[mask]
+        idx = np.argsort(time_arr)
+        time_arr, val_arr = time_arr[idx], val_arr[idx]
+
+        # Coordinates
+        try:
+            lat  = _get_scalar(row, 'geo_meanLat',  'geo_meanLatitude',  'latitude')
+            lon  = _get_scalar(row, 'geo_meanLon',  'geo_meanLongitude', 'longitude')
+            elev = _get_scalar(row, 'geo_meanElev', 'geo_meanElevation', 'elevation')
+        except Exception:
+            n_skip += 1
+            continue
+
+        # Proxy type
+        std_name = str(row.get('paleoData_standardName') or
+                       row.get('paleoData_proxy')         or
+                       row.get('paleoData_proxyGeneral')  or
+                       vname)
+        archive  = str(row.get('archiveType') or row.get('archive') or '')
+        ptype    = create_ptype(archive, std_name)
+
+        # Seasonality
+        seasonality = convert_seasonality(
+            row.get('paleoData_seasonality') or row.get('paleoData_interpretation_seasonality'),
+            lat
         )
-        print(f"Found {len(lpd_files)} .lpd files")
 
-        # Build ProxyDatabase
-        pdb    = cfr.ProxyDatabase()
-        n_ok   = 0
-        n_skip = 0
+        # Record ID
+        pid = str(row.get('TSID') or row.get('paleoData_TSID') or
+                  row.get('dataSetName') or f'record_{n_ok}')
 
-        for lpd_path in lpd_files:
-            recs = _parse_lpd(lpd_path)
-            for rec in recs:
-                try:
-                    record = cfr.ProxyRecord(
-                        pid=rec['pid'],
-                        lat=rec['lat'], lon=rec['lon'], elev=rec['elev'],
-                        time=rec['time'],
-                        value=rec['value'],
-                        ptype=rec['ptype'],
-                        seasonality=rec['seasonality'],
-                        value_name=rec['value_name'],
-                        value_unit=rec['value_unit'],
-                    )
-                    pdb   += record
-                    n_ok  += 1
-                except Exception as e:
-                    print(f"  Warning: ProxyRecord failed for {rec['pid']}: {e}")
-                    n_skip += 1
+        try:
+            record = cfr.ProxyRecord(
+                pid=pid,
+                lat=lat, lon=lon, elev=elev,
+                time=time_arr,
+                value=val_arr,
+                ptype=ptype,
+                seasonality=seasonality,
+                value_name=vname,
+                value_unit=str(row.get('paleoData_units') or 'unknown'),
+            )
+            pdb   += record
+            n_ok  += 1
+        except Exception as e:
+            print(f"  Warning: ProxyRecord failed for {pid}: {e}")
+            n_skip += 1
 
     print(f"\nProxy records: {n_ok} added, {n_skip} skipped")
 
     if n_ok == 0:
-        raise RuntimeError("No proxy records were added — check .lpd file structure")
+        raise RuntimeError(
+            "No proxy records were added — check paleoData structure and time key names"
+        )
 
     # Ptype breakdown
     ptypes = {}
