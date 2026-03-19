@@ -89,39 +89,53 @@ jobs:
       - name: Generate LiPD data from query
         if: steps.pathway.outputs.pathway == 'github_actions' && steps.pathway.outputs.mode == 'filtered'
         run: |
-          echo "Querying lipdverse and generating data using lipdGenerator container..."
+          echo "Querying lipdverse and generating .lpd files using lipdGenerator container..."
           mkdir -p lipd_output
           docker run --rm \
             -v $(pwd)/query_params.json:/query_params.json:ro \
             -v $(pwd)/lipd_output:/output \
-            davidedge/lipd_webapps:lipdGenerator /query_params.json /output all
+            davidedge/lipd_webapps:lipdGenerator /query_params.json /output lpd
 
-          if [ ! -f lipd_output/lipd_legacy.pkl ]; then
-            echo "ERROR: lipdGenerator did not produce lipd_legacy.pkl"
+          if [ ! -f lipd_output/lipd_files.zip ]; then
+            echo "ERROR: lipdGenerator did not produce lipd_files.zip"
             ls -la lipd_output/ || true
             exit 1
           fi
 
-          cp lipd_output/lipd_legacy.pkl lipd_data.pkl
-          ls -lh lipd_data.pkl
+          echo "lipd_files.zip ready:"
+          ls -lh lipd_output/lipd_files.zip
 
       - name: Verify LiPD data created
         run: |
-          if [ -f lipd_data.pkl ]; then
-            FILE_SIZE=$(stat -c%s lipd_data.pkl 2>/dev/null || stat -f%z lipd_data.pkl)
-            echo "LiPD data ready: $FILE_SIZE bytes"
+          if [ -f lipd_data.pkl ] || [ -f lipd_output/lipd_files.zip ]; then
+            echo "LiPD data ready"
+            ls -lh lipd_data.pkl lipd_output/lipd_files.zip 2>/dev/null || true
           else
-            echo "ERROR: No LiPD data file found (lipd_data.pkl)"
+            echo "ERROR: No LiPD data found (expected lipd_data.pkl or lipd_output/lipd_files.zip)"
             exit 1
           fi
 
       - name: Pull Docker image
         run: docker pull davidedge/lmr2:latest
 
-      # Convert raw LiPD dict pickle → CFR-compatible DataFrame pickle.
-      - name: Convert LiPD format
+      # FILTERED PATHWAY: lipd_files.zip → cfr.ProxyDatabase via pylipd SPARQL
+      - name: Convert LiPD to ProxyDatabase (filtered pathway)
+        if: steps.pathway.outputs.pathway == 'github_actions' && steps.pathway.outputs.mode == 'filtered'
         run: |
-          echo "Converting LiPD pickle to CFR DataFrame format..."
+          echo "Converting .lpd files to cfr.ProxyDatabase using lipd_to_pdb.py ..."
+          docker run --rm \
+            -v $(pwd)/lipd_output/lipd_files.zip:/app/lipd_files.zip:ro \
+            -v $(pwd)/lipd_to_pdb.py:/app/lipd_to_pdb.py:ro \
+            -v $(pwd):/output \
+            -w /app \
+            davidedge/lmr2:latest \
+            conda run -n cfr-env python lipd_to_pdb.py lipd_files.zip /output/lipd_cfr.pkl
+
+      # ARCHIVED / TRADITIONAL PATHWAY: legacy LiPD dict pickle → CFR DataFrame
+      - name: Convert LiPD format (archived/traditional pathway)
+        if: steps.pathway.outputs.mode != 'filtered'
+        run: |
+          echo "Converting LiPD pickle to CFR format using convert_lipd_to_cfr_dataframe.py ..."
           docker run --rm \
             -v $(pwd)/lipd_data.pkl:/app/lipd_data.pkl:ro \
             -v $(pwd)/convert_lipd_to_cfr_dataframe.py:/app/convert_lipd_to_cfr_dataframe.py:ro \

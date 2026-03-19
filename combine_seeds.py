@@ -1,17 +1,3 @@
-"""
-combine_seeds.py  —  merge all job_r*_recon.nc seed files into combined_recon.nc
-
-Runs in a fresh Docker container *after* the reconstruction container exits,
-so peak memory here is only the data being combined (not the full CFR state).
-
-Memory strategy: open each seed file lazily with xarray's dask backend and
-write the combined dataset in time-chunks so only one chunk is resident at a
-time.  This keeps peak RAM proportional to chunk_size rather than n_seeds * T.
-
-Combined layout (expected by presto-viz Script 1):
-  tas    (time, n_seeds, lat, lon)  – one spatial mean per seed
-  tas_gm (time, total_ens)          – all ensemble members across all seeds
-"""
 import glob
 import os
 import xarray as xr
@@ -28,22 +14,20 @@ print(f'Combining {len(files)} seed file(s): {[os.path.basename(f) for f in file
 tas_list    = []
 tas_gm_list = []
 for f in files:
-    # chunks= enables dask lazy loading; data stays on disk until written
     ds = xr.open_dataset(f, chunks={'time': CHUNK_TIME})
-    tas_list.append(ds['tas'])     # (time, lat, lon) — no ens dim
+    tas_list.append(ds['tas'])     # (time, lat, lon) — ensemble mean, no ens dim
 
-    # Each file's tas_gm has ens=[0..nens-1].  Concatenating multiple files
-    # with identical ens coordinate values triggers xarray's duplicate-index
-    # check.  Drop the coordinate so xarray builds a clean RangeIndex instead.
-    # Script 1 accesses .values only, so coordinate labels don't matter.
+    # Each file's tas_gm has ens=[0..nens-1].  Drop the coordinate so xarray
+    # builds a clean RangeIndex when concatenating across seeds.
     tas_gm_list.append(ds['tas_gm'].drop_vars('ens'))
 
-# tas: concat creates (n_seeds, time, lat, lon); transpose to (time, n_seeds, lat, lon)
-tas    = xr.concat(tas_list,    dim='ens').transpose('time', 'ens', 'lat', 'lon')
-# tas_gm: concat along unlabelled ens dim → (time, total_ens)
+# tas: one ensemble-mean field per seed → concat along 'seed' dim, not 'ens'
+# (ens is reserved for the full ensemble members in tas_gm)
+tas    = xr.concat(tas_list,    dim='seed').transpose('time', 'seed', 'lat', 'lon')
+
+# tas_gm: all ensemble members across all seeds → concat along 'ens' dim
 tas_gm = xr.concat(tas_gm_list, dim='ens')
 
-# to_netcdf streams chunks to disk without materialising the full array
 xr.Dataset({'tas': tas, 'tas_gm': tas_gm}).to_netcdf(OUT_PATH)
 
 print(f'combined_recon.nc written: {OUT_PATH}')
