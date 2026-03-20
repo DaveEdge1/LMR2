@@ -118,7 +118,7 @@ jobs:
       - name: Pull Docker image
         run: docker pull davidedge/lmr2:latest
 
-      # FILTERED PATHWAY: lipd_files.zip → cfr.ProxyDatabase via pylipd SPARQL
+      # FILTERED PATHWAY: lipd_files.zip → cfr.ProxyDatabase (direct JSON parsing, no SPARQL)
       - name: Convert LiPD to ProxyDatabase (filtered pathway)
         if: steps.pathway.outputs.pathway == 'github_actions' && steps.pathway.outputs.mode == 'filtered'
         run: |
@@ -157,7 +157,7 @@ jobs:
       - name: Upload CFR data artifact
         uses: actions/upload-artifact@v4
         with:
-          name: lipd-cfr-data-${{ inputs.unique_id || github.run_id }}
+          name: lipd-cfr-data-${{ github.run_id }}
           path: lipd_cfr.pkl
           retention-days: 7
 
@@ -178,7 +178,7 @@ jobs:
       - name: Download CFR data artifact
         uses: actions/download-artifact@v4
         with:
-          name: lipd-cfr-data-${{ inputs.unique_id || github.run_id }}
+          name: lipd-cfr-data-${{ github.run_id }}
 
       - name: Pull Docker image
         run: docker pull davidedge/lmr2:latest
@@ -215,7 +215,7 @@ jobs:
       - name: Upload reconstruction results
         uses: actions/upload-artifact@v4
         with:
-          name: lmr-reconstruction-${{ inputs.unique_id || github.run_id }}
+          name: lmr-reconstruction-${{ github.run_id }}
           path: ./recons/
           retention-days: 90
 
@@ -224,5 +224,5 @@ jobs:
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
           git add recons/
-          git diff --staged --quiet || git commit -m "Add LMR reconstruction results for ${{ inputs.unique_id || github.run_id }}"
+          git diff --staged --quiet || git commit -m "Add LMR reconstruction results for ${{ github.run_id }}"
           git push
