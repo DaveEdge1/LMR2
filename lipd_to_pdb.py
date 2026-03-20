@@ -359,6 +359,12 @@ def main():
         idx = np.argsort(time_arr)
         time_arr, val_arr = time_arr[idx], val_arr[idx]
 
+        # Skip constant-value records: OLS slope=0 → varye=0, MSE=0 → ob_err=0
+        # → kdenom=0 → EnKF Kalman gain blows up
+        if np.std(val_arr) < 1e-6:
+            n_skip += 1
+            continue
+
         # Coordinates
         try:
             lat  = _get_scalar(row, 'geo_meanLat',  'geo_meanLatitude',  'latitude')
