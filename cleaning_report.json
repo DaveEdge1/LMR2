@@ -1,0 +1,3006 @@
+[
+  {
+    "groupId": 0,
+    "records": [
+      {
+        "tsid": "AB08MEN01_d18O",
+        "dataSetName": "AB08MEN01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_010_iso2k",
+        "dataSetName": "CO08ABSU",
+        "decision": "remove"
+      },
+      {
+        "tsid": "Ocean2kHR_010",
+        "dataSetName": "Ocn-MentawaiIslands.Abram.2008",
+        "decision": "keep"
+      }
+    ],
+    "notes": "Ocean2kHR_010_iso2k and Ocean2kHR_010 are identical"
+  },
+  {
+    "groupId": 1,
+    "records": [
+      {
+        "tsid": "AB20MEN01_d18O",
+        "dataSetName": "AB20MEN01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO15ABSP01A",
+        "dataSetName": "CO15ABSP",
+        "decision": "remove"
+      }
+    ],
+    "notes": "AB20MEN01_d18O and CO15ABSP01A are identical in their period of overlap"
+  },
+  {
+    "groupId": 2,
+    "records": [
+      {
+        "tsid": "Africa_001",
+        "dataSetName": "Afr-ColdAirCave.Sundqvist.2013",
+        "decision": "keep"
+      },
+      {
+        "tsid": "SP13SUSA01A",
+        "dataSetName": "SP13SUSA",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 3,
+    "records": [
+      {
+        "tsid": "AL16PUR02_SrCa",
+        "dataSetName": "AL16PUR02",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_100",
+        "dataSetName": "Ocn-TurrumoteReefPuertoRico.Kilbourne.2008",
+        "decision": "keep"
+      },
+      {
+        "tsid": "KI08PAR01_SrCa",
+        "dataSetName": "KI08PAR01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "KI14PAR01_SrCa",
+        "dataSetName": "KI14PAR01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "RO19PAR01_SrCa",
+        "dataSetName": "RO19PAR01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 4,
+    "records": [
+      {
+        "tsid": "Ant_005",
+        "dataSetName": "Ant-BerknerIsland.Mulvaney.2002",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC02MUBI01A",
+        "dataSetName": "IC02MUBI",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 5,
+    "records": [
+      {
+        "tsid": "Ant_017",
+        "dataSetName": "Ant-CoastalDML.Thamban.2012",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC11LAB401A",
+        "dataSetName": "IC11LAB4",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 6,
+    "records": [
+      {
+        "tsid": "Ant_012",
+        "dataSetName": "Ant-DomeC.Stenni.2001",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC01JO0101A",
+        "dataSetName": "IC01JO01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 7,
+    "records": [
+      {
+        "tsid": "Ant_009",
+        "dataSetName": "Ant-DomeF1993.Uemura.2014",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC07KADF01A",
+        "dataSetName": "IC07KADF",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC08HODF02A",
+        "dataSetName": "IC08HODF",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ant_010",
+        "dataSetName": "Ant-DomeF2001.Uemura.2008",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 8,
+    "records": [
+      {
+        "tsid": "Ant_011",
+        "dataSetName": "Ant-DSS.Moy.2012",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC13PALD01A",
+        "dataSetName": "IC13PALD",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 9,
+    "records": [
+      {
+        "tsid": "Ant_014",
+        "dataSetName": "Ant-Ferrigno.Thomas.2013",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC13THFE01A",
+        "dataSetName": "IC13THFE",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 10,
+    "records": [
+      {
+        "tsid": "Ant_022",
+        "dataSetName": "Ant-JamesRossIsland.Mulvaney.2013",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC12MUJR01A",
+        "dataSetName": "IC12MUJR",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 11,
+    "records": [
+      {
+        "tsid": "Ant_033",
+        "dataSetName": "Ant-MES.Rhodes.2012",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC12RHME01A",
+        "dataSetName": "IC12RHME",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 12,
+    "records": [
+      {
+        "tsid": "Ant_023",
+        "dataSetName": "Ant-PlateauRemote.Mosley-Thompson.2013",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC00COPR01A",
+        "dataSetName": "IC00COPR",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 13,
+    "records": [
+      {
+        "tsid": "Ant_024",
+        "dataSetName": "Ant-SipleStation.Mosley-Thompson.1990",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC96MOSS01A",
+        "dataSetName": "IC96MOSS",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 14,
+    "records": [
+      {
+        "tsid": "Ant_007",
+        "dataSetName": "Ant-SiteDML05.Graf.2002",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC00OE0503A",
+        "dataSetName": "IC00OE05",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC02GR0501A",
+        "dataSetName": "IC02GR05",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC99OE0502A",
+        "dataSetName": "IC99OE05",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 15,
+    "records": [
+      {
+        "tsid": "Ant_006",
+        "dataSetName": "Ant-SiteDML07.Graf.2002",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC02GR0701A",
+        "dataSetName": "IC02GR07",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 16,
+    "records": [
+      {
+        "tsid": "Ant_008",
+        "dataSetName": "Ant-SiteDML17.Graf.2002",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC00OE2301A",
+        "dataSetName": "IC00OE23",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC02GR1701A",
+        "dataSetName": "IC02GR17",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 17,
+    "records": [
+      {
+        "tsid": "Ant_025",
+        "dataSetName": "Ant-TALDICE.Stenni.2010",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC11STTA01A",
+        "dataSetName": "IC11STTA",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 18,
+    "records": [
+      {
+        "tsid": "Ant_026",
+        "dataSetName": "Ant-TalosDome.Stenni.2002",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC02STTA02A",
+        "dataSetName": "IC02STTA",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 19,
+    "records": [
+      {
+        "tsid": "Ant_035",
+        "dataSetName": "Ant-TaylorDome.Steig.2000",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC00STTY01A",
+        "dataSetName": "IC00STTY",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 20,
+    "records": [
+      {
+        "tsid": "Ant_037",
+        "dataSetName": "Ant-US-ITASE-2000-1.Steig.2013",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC13ST0101A",
+        "dataSetName": "IC13ST01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 21,
+    "records": [
+      {
+        "tsid": "Ant_050",
+        "dataSetName": "Ant-US-ITASE-2002-4.Steig.2013",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC13ST2401A",
+        "dataSetName": "IC13ST24",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 22,
+    "records": [
+      {
+        "tsid": "Ant_027",
+        "dataSetName": "Ant-VLG.Bertler.2011",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC11BEVL01A",
+        "dataSetName": "IC11BEVL",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 23,
+    "records": [
+      {
+        "tsid": "Ant_030",
+        "dataSetName": "Ant-WDC05A.Steig.2013",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC13STWD02A",
+        "dataSetName": "IC13STWD",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC13STWD02A2",
+        "dataSetName": "IC13STWD",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC13STWD01A",
+        "dataSetName": "IC13STWD",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ant_031",
+        "dataSetName": "Ant-WDC06A.Steig.2013",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 24,
+    "records": [
+      {
+        "tsid": "Arc_032",
+        "dataSetName": "Arc-Agassiz.Vinther.2008",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC08VI7701A",
+        "dataSetName": "IC08VI77",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC08VI7901A",
+        "dataSetName": "IC08VI79",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC08VI8401A",
+        "dataSetName": "IC08VI84",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC08VI8701A",
+        "dataSetName": "IC08VI87",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC09KA7901A",
+        "dataSetName": "IC09KA79",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC09VIA800A",
+        "dataSetName": "IC09VIA8",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC95FI8701A",
+        "dataSetName": "IC95FI87",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 25,
+    "records": [
+      {
+        "tsid": "Arc_089",
+        "dataSetName": "Arc-AkademiiNaukIceCap.Opel.2013",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC09OPAN01C",
+        "dataSetName": "IC09OPAN",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC13OPAN01A",
+        "dataSetName": "IC13OPAN",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 26,
+    "records": [
+      {
+        "tsid": "Arc_018",
+        "dataSetName": "Arc-Austfonna.Isaksson.2005",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC05ISAU01A",
+        "dataSetName": "IC05ISAU",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 27,
+    "records": [
+      {
+        "tsid": "Arc_005",
+        "dataSetName": "Arc-CampCentury.Fisher.1969",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC09VICC01A",
+        "dataSetName": "IC09VICC",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 28,
+    "records": [
+      {
+        "tsid": "Arc_033",
+        "dataSetName": "Arc-Crete.Vinther.2010",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC10VICR01A",
+        "dataSetName": "IC10VICR",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC10VICR01B",
+        "dataSetName": "IC10VICR",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 29,
+    "records": [
+      {
+        "tsid": "Arc_043",
+        "dataSetName": "Arc-DevonIceCap.Fisher.1983",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC76FIDE01A",
+        "dataSetName": "IC76FIDE",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC76FIDE02A",
+        "dataSetName": "IC76FIDE",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 30,
+    "records": [
+      {
+        "tsid": "Arc_034",
+        "dataSetName": "Arc-Dye.Vinther.2010",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC06VID301A",
+        "dataSetName": "IC06VID3",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC09KAD301A",
+        "dataSetName": "IC09KAD3",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC10VID301A",
+        "dataSetName": "IC10VID3",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC10VID302A",
+        "dataSetName": "IC10VID3",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC10VID302B",
+        "dataSetName": "IC10VID3",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC10VID303A",
+        "dataSetName": "IC10VID3",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC10VID304B",
+        "dataSetName": "IC10VID3",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC10VID305A",
+        "dataSetName": "IC10VID3",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC10VID305B",
+        "dataSetName": "IC10VID3",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC10VID302A2",
+        "dataSetName": "IC10VID3",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC10VIP100B",
+        "dataSetName": "IC10VIP1",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC10VIP100A",
+        "dataSetName": "IC10VIP1",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC10VIP200B",
+        "dataSetName": "IC10VIP2",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC10VIP200A",
+        "dataSetName": "IC10VIP2",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC10VIP300B",
+        "dataSetName": "IC10VIP3",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC10VIP300A",
+        "dataSetName": "IC10VIP3",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 31,
+    "records": [
+      {
+        "tsid": "Arc_035",
+        "dataSetName": "Arc-GRIP.Vinther.2010",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC10VIGR01A",
+        "dataSetName": "IC10VIGR",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 32,
+    "records": [
+      {
+        "tsid": "Arc_031",
+        "dataSetName": "Arc-NGRIP1.Vinther.2006",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC06VING01A",
+        "dataSetName": "IC06VING",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC09KANG01A",
+        "dataSetName": "IC09KANG",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 33,
+    "records": [
+      {
+        "tsid": "Arc_026",
+        "dataSetName": "Arc-NGTB16.Schwager.1998",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC00SC1601A",
+        "dataSetName": "IC00SC16",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 34,
+    "records": [
+      {
+        "tsid": "Arc_027",
+        "dataSetName": "Arc-NGTB18.Schwager.1998",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC00SC1801A",
+        "dataSetName": "IC00SC18",
+        "decision": "keep"
+      },
+      {
+        "tsid": "NPM11111",
+        "dataSetName": "IC00SC18",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 35,
+    "records": [
+      {
+        "tsid": "Arc_028",
+        "dataSetName": "Arc-NGTB21.Schwager.1998",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC00SC2101A",
+        "dataSetName": "IC00SC21",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 36,
+    "records": [
+      {
+        "tsid": "Arc_044",
+        "dataSetName": "Arc-PennyIceCapP96.Fisher.1998",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC98FIPE01A",
+        "dataSetName": "IC98FIPE",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 37,
+    "records": [
+      {
+        "tsid": "Arc_151",
+        "dataSetName": "Arc-PrinceOfWales.Kinnard.2011",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC11KIPW01A",
+        "dataSetName": "IC11KIPW",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 38,
+    "records": [
+      {
+        "tsid": "Arc_056",
+        "dataSetName": "Arc-Renland.Vinther.2008",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC08VIRE01A",
+        "dataSetName": "IC08VIRE",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC09VIRE01A",
+        "dataSetName": "IC09VIRE",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC10VIRE01B",
+        "dataSetName": "IC10VIRE",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC10VIRE01A",
+        "dataSetName": "IC10VIRE",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 39,
+    "records": [
+      {
+        "tsid": "Arc_053",
+        "dataSetName": "Arc-StoreggaSlide.Sejrup.2011",
+        "decision": "keep"
+      },
+      {
+        "tsid": "MS11SENS01",
+        "dataSetName": "MS11SENS",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 40,
+    "records": [
+      {
+        "tsid": "AS05GUA01_d18O",
+        "dataSetName": "AS05GUA01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_166_iso2k",
+        "dataSetName": "CO05ASGU",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_166",
+        "dataSetName": "Ocn-DoubleReef.Asami.2005",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 41,
+    "records": [
+      {
+        "tsid": "Asia_236",
+        "dataSetName": "Asi-Dasuopu.Thompson.2000",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC00THDS03B",
+        "dataSetName": "IC00THDS",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC00THDS03A",
+        "dataSetName": "IC00THDS",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 42,
+    "records": [
+      {
+        "tsid": "Asia_247",
+        "dataSetName": "Asi-Guliya.Thompson.1997",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC97THGL01A",
+        "dataSetName": "IC97THGL",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 43,
+    "records": [
+      {
+        "tsid": "Asia_305",
+        "dataSetName": "Asi-Puruogangri.Thompson.2006",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC06THPR01A",
+        "dataSetName": "IC06THPR",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC06THPR02A",
+        "dataSetName": "IC06THPR",
+        "decision": "keep"
+      },
+      {
+        "tsid": "IC06THPR02B",
+        "dataSetName": "IC06THPR",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 44,
+    "records": [
+      {
+        "tsid": "BA04FIJ01_d18O",
+        "dataSetName": "BA04FIJ01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO04BAFI01A",
+        "dataSetName": "CO04BAFI",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO04BAFI02A",
+        "dataSetName": "CO04BAFI",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO04BAFI00A",
+        "dataSetName": "CO04BAFI",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_157_iso2k",
+        "dataSetName": "CO04LIFI",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_142_iso2k",
+        "dataSetName": "CO05BAFI",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_156_iso2k",
+        "dataSetName": "CO06LIFI",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_157",
+        "dataSetName": "Ocn-SavusavuBay1F.Linsley.2006",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_156",
+        "dataSetName": "Ocn-SavusavuBayAB.Linsley.2006",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_142",
+        "dataSetName": "Ocn-SavusavuBayFiji.Bagnato.2005",
+        "decision": "keep"
+      },
+      {
+        "tsid": "BA04FIJ02_d18O",
+        "dataSetName": "BA04FIJ02",
+        "decision": "keep"
+      },
+      {
+        "tsid": "LI04FIJ01_d18O",
+        "dataSetName": "LI04FIJ01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "LI04FIJ01_d18O_sw",
+        "dataSetName": "LI04FIJ01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "LI06FIJ01_d18O",
+        "dataSetName": "LI06FIJ01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 45,
+    "records": [
+      {
+        "tsid": "BA04FIJ01_SrCa",
+        "dataSetName": "BA04FIJ01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_158",
+        "dataSetName": "Ocn-SavusavuBay1F.Linsley.2006",
+        "decision": "keep"
+      },
+      {
+        "tsid": "BA04FIJ02_SrCa",
+        "dataSetName": "BA04FIJ02",
+        "decision": "keep"
+      },
+      {
+        "tsid": "LI04FIJ01_SrCa",
+        "dataSetName": "LI04FIJ01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 46,
+    "records": [
+      {
+        "tsid": "BO99MOO01_d18O",
+        "dataSetName": "BO99MOO01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_132_iso2k",
+        "dataSetName": "CO98BOFP",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_132",
+        "dataSetName": "Ocn-Moorea.Boiseau.1998",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 47,
+    "records": [
+      {
+        "tsid": "CA07FLI01_d18O",
+        "dataSetName": "CA07FLI01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_193_iso2k",
+        "dataSetName": "CO07CAFR",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_193",
+        "dataSetName": "Ocn-CoralSea.Calvo.2007",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 48,
+    "records": [
+      {
+        "tsid": "CA07FLI01_SrCa",
+        "dataSetName": "CA07FLI01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_194",
+        "dataSetName": "Ocn-CoralSea.Calvo.2007",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 49,
+    "records": [
+      {
+        "tsid": "CA13DIA01_d18O",
+        "dataSetName": "CA13DIA01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO13CAHN01A",
+        "dataSetName": "CO13CAHN",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO13CAHN02A",
+        "dataSetName": "CO13CAHN",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 50,
+    "records": [
+      {
+        "tsid": "CA13SAP01_d18O",
+        "dataSetName": "CA13SAP01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO13CABL01A",
+        "dataSetName": "CO13CABL",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO13CABL02A",
+        "dataSetName": "CO13CABL",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 51,
+    "records": [
+      {
+        "tsid": "CA14TIM01_d18O",
+        "dataSetName": "CA14TIM01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO14CATI01B",
+        "dataSetName": "CO14CATI",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO14CATI01A",
+        "dataSetName": "CO14CATI",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CA14TIM01_d18O_sw",
+        "dataSetName": "CA14TIM01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 52,
+    "records": [
+      {
+        "tsid": "CH03LOM01_d18O",
+        "dataSetName": "CH03LOM01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_006_iso2k",
+        "dataSetName": "CO03CHBA",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_006",
+        "dataSetName": "Ocn-Lombok.Charles.2003",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 53,
+    "records": [
+      {
+        "tsid": "CH98PIR01_d18O",
+        "dataSetName": "CH98PIR01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO98CHPI01A",
+        "dataSetName": "CO98CHPI",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 54,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_001_iso2k",
+        "dataSetName": "CO00COKY",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO00MAL01_d18O",
+        "dataSetName": "CO00MAL01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "NA09MAL01_d18O",
+        "dataSetName": "NA09MAL01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_001",
+        "dataSetName": "Ocn-Malindi.Cole.2000",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_012",
+        "dataSetName": "Ocn-Malindi.Nakamura.2009",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_012_iso2k",
+        "dataSetName": "CO09NAKY",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 55,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_124_iso2k",
+        "dataSetName": "CO00DRBE",
+        "decision": "keep"
+      },
+      {
+        "tsid": "GO08BER01_d18O",
+        "dataSetName": "GO08BER01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_125_iso2k",
+        "dataSetName": "CO00DRBE",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 56,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_019_iso2k",
+        "dataSetName": "CO00FERA",
+        "decision": "keep"
+      },
+      {
+        "tsid": "FE18RUS01_d18O",
+        "dataSetName": "FE18RUS01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_019",
+        "dataSetName": "Ocn-RedSea.Felis.2000",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_018",
+        "dataSetName": "Ocn-SinaiPeninsula,RedSea.Moustafa.2000",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 57,
+    "records": [
+      {
+        "tsid": "CO00KUNI01Aa",
+        "dataSetName": "CO00KUNI",
+        "decision": "keep"
+      },
+      {
+        "tsid": "KU00NIN01_d18O",
+        "dataSetName": "KU00NIN01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_008",
+        "dataSetName": "Ocn-Ningaloo.Kuhnert.2000",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO00KUNI01Ab",
+        "dataSetName": "CO00KUNI",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 58,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_177_iso2k",
+        "dataSetName": "CO00URMA",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_177",
+        "dataSetName": "Ocn-Maiana.Urban.2000",
+        "decision": "keep"
+      },
+      {
+        "tsid": "UR00MAI01_d18O",
+        "dataSetName": "UR00MAI01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO00URMA01A",
+        "dataSetName": "CO00URMA",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 59,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_140_iso2k",
+        "dataSetName": "CO01TUNG",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_140",
+        "dataSetName": "Ocn-MadangLagoonPapuaNewGuinea.Kuhnert.2001",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_172",
+        "dataSetName": "Ocn-MadangLagoonPapuaNewGuinea.Tudhope.1995",
+        "decision": "keep"
+      },
+      {
+        "tsid": "TU01DEP01_d18O",
+        "dataSetName": "TU01DEP01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "TU95MAD01_d18O",
+        "dataSetName": "TU95MAD01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_141_iso2k",
+        "dataSetName": "CO01TUNG",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_172_iso2k",
+        "dataSetName": "CO95TUNG",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 60,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_102_iso2k",
+        "dataSetName": "CO02KUBE",
+        "decision": "keep"
+      },
+      {
+        "tsid": "DR00NBB01_d18O",
+        "dataSetName": "DR00NBB01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_102",
+        "dataSetName": "Ocn-NorthEastBreakers_Bermuda.Kuhnert.2002",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_105",
+        "dataSetName": "Ocn-NorthEastBreakers_Bermuda.Kuhnert.2005",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_105_iso2k",
+        "dataSetName": "CO05KUBE",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 61,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_171_iso2k",
+        "dataSetName": "CO03CHBU",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_171",
+        "dataSetName": "Ocn-BunakenIsland.Charles.2003",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 62,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_139_iso2k",
+        "dataSetName": "CO03COPM",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03PAL01_d18O",
+        "dataSetName": "CO03PAL01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03PAL02_d18O",
+        "dataSetName": "CO03PAL02",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03PAL03_d18O",
+        "dataSetName": "CO03PAL03",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03PAL04_d18O",
+        "dataSetName": "CO03PAL04",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03PAL05_d18O",
+        "dataSetName": "CO03PAL05",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03PAL06_d18O",
+        "dataSetName": "CO03PAL06",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03PAL07_d18O",
+        "dataSetName": "CO03PAL07",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03PAL08_d18O",
+        "dataSetName": "CO03PAL08",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03PAL09_d18O",
+        "dataSetName": "CO03PAL09",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03PAL10_d18O",
+        "dataSetName": "CO03PAL10",
+        "decision": "keep"
+      },
+      {
+        "tsid": "NU11PAL01_d18O",
+        "dataSetName": "NU11PAL01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "NU11PAL01_d18O_sw",
+        "dataSetName": "NU11PAL01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_139",
+        "dataSetName": "Ocn-Palmyra.Cobb.2013",
+        "decision": "keep"
+      },
+      {
+        "tsid": "SA19PAL01_d18O",
+        "dataSetName": "SA19PAL01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "SA19PAL02_d18O",
+        "dataSetName": "SA19PAL02",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03COPM02A",
+        "dataSetName": "CO03COPM",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03COPM03A",
+        "dataSetName": "CO03COPM",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03COPM04C",
+        "dataSetName": "CO03COPM",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03COPM05C",
+        "dataSetName": "CO03COPM",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03COPM06C",
+        "dataSetName": "CO03COPM",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03COPM07C",
+        "dataSetName": "CO03COPM",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03COPM11C",
+        "dataSetName": "CO03COPM",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03COPM08B",
+        "dataSetName": "CO03COPM",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03COPM09B",
+        "dataSetName": "CO03COPM",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03COPM10B",
+        "dataSetName": "CO03COPM",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO03COPM01A",
+        "dataSetName": "CO03COPM",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_162_iso2k",
+        "dataSetName": "CO11NUPM",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_160_iso2k",
+        "dataSetName": "CO11NUPM",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 63,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_174_iso2k",
+        "dataSetName": "CO04KIVA",
+        "decision": "keep"
+      },
+      {
+        "tsid": "KI04MCV01_d18O",
+        "dataSetName": "KI04MCV01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_174",
+        "dataSetName": "Ocn-MaloChannelEspirituSantoIsland.Kilbourne.2004",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 64,
+    "records": [
+      {
+        "tsid": "CO04LIRA01A",
+        "dataSetName": "CO04LIRA",
+        "decision": "keep"
+      },
+      {
+        "tsid": "LI00RAR01_d18O",
+        "dataSetName": "LI00RAR01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "LI00RAR01_d18O_sw",
+        "dataSetName": "LI00RAR01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "LI06RAR01_d18O",
+        "dataSetName": "LI06RAR01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "LI06RAR02_d18O",
+        "dataSetName": "LI06RAR02",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_147",
+        "dataSetName": "Ocn-Rarotonga_d18O2R.Linsley.2006",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_150",
+        "dataSetName": "Ocn-Rarotonga_d18O3R.Linsley.2006",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_152",
+        "dataSetName": "Ocn-Rarotonga_d18O99.Linsley.2006",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO04LIRA02A",
+        "dataSetName": "CO04LIRA",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO04LIRA03A",
+        "dataSetName": "CO04LIRA",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 65,
+    "records": [
+      {
+        "tsid": "CO04PFCH02A",
+        "dataSetName": "CO04PFCH",
+        "decision": "keep"
+      },
+      {
+        "tsid": "PF04PBA01_d18O",
+        "dataSetName": "PF04PBA01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO04PFCH01A",
+        "dataSetName": "CO04PFCH",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 66,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_013_iso2k",
+        "dataSetName": "CO04PFRE",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_013",
+        "dataSetName": "Ocn-Reunion.Pfeiffer.2004",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 67,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_020_iso2k",
+        "dataSetName": "CO04ZIMG",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_021",
+        "dataSetName": "Ocn-Ifaty1.Zinke.2014",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_020",
+        "dataSetName": "Ocn-Ifaty4.Zinke.2004",
+        "decision": "keep"
+      },
+      {
+        "tsid": "ZI04IFR01_d18O",
+        "dataSetName": "ZI04IFR01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "ZI14IFR02_d18O",
+        "dataSetName": "ZI14IFR02",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 68,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_007_iso2k",
+        "dataSetName": "CO06DATZ",
+        "decision": "keep"
+      },
+      {
+        "tsid": "DA06MAF01_d18O",
+        "dataSetName": "DA06MAF01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "DA06MAF02_d18O",
+        "dataSetName": "DA06MAF02",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_007",
+        "dataSetName": "Ocn-Mafia.Damassa.2006",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 69,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_107_iso2k",
+        "dataSetName": "CO06MOPE",
+        "decision": "keep"
+      },
+      {
+        "tsid": "MO06PED01_d18O",
+        "dataSetName": "MO06PED01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_107",
+        "dataSetName": "Ocn-PedradeLume-CapeVerdeIslands.Moses.2006",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 70,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_108_iso2k",
+        "dataSetName": "CO06MOTO",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_108",
+        "dataSetName": "Ocn-BuccooReefTobagoMontastrea.Moses.2006",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_110",
+        "dataSetName": "Ocn-BuccooReefTobagoSidereastrea.Moses.2006",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_110_iso2k",
+        "dataSetName": "CO06MOTO",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 71,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_144_iso2k",
+        "dataSetName": "CO06QUNG",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_144",
+        "dataSetName": "Ocn-Rabaul.Quinn.2006",
+        "decision": "keep"
+      },
+      {
+        "tsid": "QU06RAB01_d18O",
+        "dataSetName": "QU06RAB01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 72,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_094_iso2k",
+        "dataSetName": "CO08GOBE",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_094",
+        "dataSetName": "Ocn-BermudaSouthShore.Goodkin.2008",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 73,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_096_iso2k",
+        "dataSetName": "CO08HEVE",
+        "decision": "keep"
+      },
+      {
+        "tsid": "HE08LRA01_d18O",
+        "dataSetName": "HE08LRA01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_096",
+        "dataSetName": "Ocn-LosRoques.Hetzinger.2008",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 74,
+    "records": [
+      {
+        "tsid": "CO08KIPR01A",
+        "dataSetName": "CO08KIPR",
+        "decision": "keep"
+      },
+      {
+        "tsid": "KI08PAR01_d18O",
+        "dataSetName": "KI08PAR01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "KI14PAR01_d18O",
+        "dataSetName": "KI14PAR01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "KI14PAR01_d18O_sw",
+        "dataSetName": "KI14PAR01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_099",
+        "dataSetName": "Ocn-TurrumoteReefPuertoRico.Kilbourne.2008",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 75,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_163_iso2k",
+        "dataSetName": "CO09FEOG",
+        "decision": "keep"
+      },
+      {
+        "tsid": "FE09OGA01_d18O",
+        "dataSetName": "FE09OGA01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_163",
+        "dataSetName": "Ocn-Miyanohama.Felis.2009",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 76,
+    "records": [
+      {
+        "tsid": "CO09NUTB01B",
+        "dataSetName": "CO09NUTB",
+        "decision": "keep"
+      },
+      {
+        "tsid": "NU09FAN01_d18O",
+        "dataSetName": "NU09FAN01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "NU09FAN01_d18O_sw",
+        "dataSetName": "NU09FAN01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "SA20FAN01_d18O",
+        "dataSetName": "SA20FAN01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "SA20FAN02_d18O",
+        "dataSetName": "SA20FAN02",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO13COTB00A",
+        "dataSetName": "CO13COTB",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 77,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_097_iso2k",
+        "dataSetName": "CO10HEIG",
+        "decision": "keep"
+      },
+      {
+        "tsid": "HE10GUA01_d18O",
+        "dataSetName": "HE10GUA01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_097",
+        "dataSetName": "Ocn-Guadeloupe.Steinhilber.2010",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 78,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_154_iso2k",
+        "dataSetName": "CO12GOVA",
+        "decision": "keep"
+      },
+      {
+        "tsid": "GO12SBV01_d18O",
+        "dataSetName": "GO12SBV01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_154",
+        "dataSetName": "Ocn-Vanuatu.Gorman.2012",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 79,
+    "records": [
+      {
+        "tsid": "WEB396032ca",
+        "dataSetName": "CO13DESC01A",
+        "decision": "keep"
+      },
+      {
+        "tsid": "DE13HAI01_d18O",
+        "dataSetName": "DE13HAI01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "DE13HAI01_d18O_sw",
+        "dataSetName": "DE13HAI01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WEBa131bf7e",
+        "dataSetName": "CO13DESC01A",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WEB832ffc0e",
+        "dataSetName": "CO17DESC01A",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WEBe86ec079",
+        "dataSetName": "CO17DESC01A",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WEB832ffc0e2",
+        "dataSetName": "CO17DESC02A",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WEBe86ec0792",
+        "dataSetName": "CO17DESC02A",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WEB832ffc0e22",
+        "dataSetName": "CO17DESC03A",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WEBe86ec07922",
+        "dataSetName": "CO17DESC03A",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WEB832ffc0e222",
+        "dataSetName": "CO17DESC04A",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WEBe86ec079222",
+        "dataSetName": "CO17DESC04A",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 80,
+    "records": [
+      {
+        "tsid": "CO13HENG01A",
+        "dataSetName": "CO13HENG",
+        "decision": "keep"
+      },
+      {
+        "tsid": "HE13MIS01_d18O",
+        "dataSetName": "HE13MIS01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "HE13MIS02_d18O",
+        "dataSetName": "HE13MIS02",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO13HENG02A",
+        "dataSetName": "CO13HENG",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO13HENG03A",
+        "dataSetName": "CO13HENG",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 81,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_181_iso2k",
+        "dataSetName": "CO14OSPA",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_183",
+        "dataSetName": "Ocn-PalauUlongChannel.Osborne.2014",
+        "decision": "keep"
+      },
+      {
+        "tsid": "OS14UCP01_d18O",
+        "dataSetName": "OS14UCP01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_183_iso2k",
+        "dataSetName": "CO14OSPA",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 82,
+    "records": [
+      {
+        "tsid": "CO14WUCL01A",
+        "dataSetName": "CO14WUCL",
+        "decision": "keep"
+      },
+      {
+        "tsid": "LI99CLI01_d18O",
+        "dataSetName": "LI99CLI01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_188",
+        "dataSetName": "Ocn-Clipperton1b.Wu.2014",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_169",
+        "dataSetName": "Ocn-ClippertonAtoll.Linsley.2000",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WU14CLI01_d18O",
+        "dataSetName": "WU14CLI01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WU14CLI01_d18O_sw",
+        "dataSetName": "WU14CLI01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO99LICL01A",
+        "dataSetName": "CO99LICL",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO99LICL02A",
+        "dataSetName": "CO99LICL",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO99LICL03A",
+        "dataSetName": "CO99LICL",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 83,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_026_iso2k",
+        "dataSetName": "CO14ZIHO",
+        "decision": "keep"
+      },
+      {
+        "tsid": "KU99HOU01_d18O",
+        "dataSetName": "KU99HOU01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_023",
+        "dataSetName": "Ocn-HoutmanAbrolhos.Kuhnert.1999",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_026",
+        "dataSetName": "Ocn-HoutmanAbrolhosHAB10A.Zinke.2014",
+        "decision": "keep"
+      },
+      {
+        "tsid": "ZI14HOU01_d18O",
+        "dataSetName": "ZI14HOU01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO99KUHO01Aa",
+        "dataSetName": "CO99KUHO",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO99KUHO01Ab",
+        "dataSetName": "CO99KUHO",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 84,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_021_iso2k",
+        "dataSetName": "CO14ZIMG",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_022",
+        "dataSetName": "Ocn-IfatyTul3.Zinke.2014",
+        "decision": "keep"
+      },
+      {
+        "tsid": "ZI14TUR01_d18O",
+        "dataSetName": "ZI14TUR01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_022_iso2k",
+        "dataSetName": "CO14ZIMG",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 85,
+    "records": [
+      {
+        "tsid": "WEB27c0dc78",
+        "dataSetName": "CO17LITW01A",
+        "decision": "keep"
+      },
+      {
+        "tsid": "RA20TAI01_d18O",
+        "dataSetName": "RA20TAI01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 86,
+    "records": [
+      {
+        "tsid": "WEB4d49a073",
+        "dataSetName": "CO17MUMA",
+        "decision": "keep"
+      },
+      {
+        "tsid": "MU17DOA01_d18O",
+        "dataSetName": "MU17DOA01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WEB1a9fc096",
+        "dataSetName": "CO17MUMA",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 87,
+    "records": [
+      {
+        "tsid": "WEB0e874eb3",
+        "dataSetName": "CO17RAPA",
+        "decision": "keep"
+      },
+      {
+        "tsid": "RA19PAI01_d18O",
+        "dataSetName": "RA19PAI01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WEB9aced55a",
+        "dataSetName": "CO17RAPA",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 88,
+    "records": [
+      {
+        "tsid": "WEB396032ca2",
+        "dataSetName": "CO17XISC01A",
+        "decision": "keep"
+      },
+      {
+        "tsid": "XI17HAI01_d18O",
+        "dataSetName": "XI17HAI01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "XI17HAI01_d18O_sw",
+        "dataSetName": "XI17HAI01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WEBa131bf7e2",
+        "dataSetName": "CO17XISC01A",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 89,
+    "records": [
+      {
+        "tsid": "WEB04cd805a",
+        "dataSetName": "CO18HECO01A",
+        "decision": "keep"
+      },
+      {
+        "tsid": "HE18COC01_d18O",
+        "dataSetName": "HE18COC01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "HE18COC01_d18O_sw",
+        "dataSetName": "HE18COC01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "HE18COC02_d18O",
+        "dataSetName": "HE18COC02",
+        "decision": "keep"
+      },
+      {
+        "tsid": "HE18COC02_d18O_sw",
+        "dataSetName": "HE18COC02",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WEBc0eedb9c",
+        "dataSetName": "CO18HECO01A",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WEB04cd805a2",
+        "dataSetName": "CO18HECO01B",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WEBc0eedb9c2",
+        "dataSetName": "CO18HECO01B",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 90,
+    "records": [
+      {
+        "tsid": "WEBfe31d859",
+        "dataSetName": "CO18RELC01A",
+        "decision": "keep"
+      },
+      {
+        "tsid": "RE18CAY01_d18O",
+        "dataSetName": "RE18CAY01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 91,
+    "records": [
+      {
+        "tsid": "CO92SHPU01A",
+        "dataSetName": "CO92SHPU",
+        "decision": "keep"
+      },
+      {
+        "tsid": "SH92PUN01_d18O",
+        "dataSetName": "SH92PUN01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 92,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_178_iso2k",
+        "dataSetName": "CO93COTW",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO93TAR01_d18O",
+        "dataSetName": "CO93TAR01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 93,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_173_iso2k",
+        "dataSetName": "CO94DUUR",
+        "decision": "keep"
+      },
+      {
+        "tsid": "DU94URV01_d18O",
+        "dataSetName": "DU94URV01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "DU94URV02_d18O",
+        "dataSetName": "DU94URV02",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_173",
+        "dataSetName": "Ocn-UrvinaBay.Dunbar.1994",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 94,
+    "records": [
+      {
+        "tsid": "CO94HEAQ02A",
+        "dataSetName": "CO94HEAQ",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_014",
+        "dataSetName": "Ocn-AqabaJordanAQ18.Heiss.1999",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_016",
+        "dataSetName": "Ocn-AqabaJordanAQ19.Heiss.1999",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO94HEAQ01A",
+        "dataSetName": "CO94HEAQ",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 95,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_138_iso2k",
+        "dataSetName": "CO94LISE",
+        "decision": "keep"
+      },
+      {
+        "tsid": "LI94SEC01_d18O",
+        "dataSetName": "LI94SEC01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_138",
+        "dataSetName": "Ocn-SecasIslandPanama.Linsley.1994",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 96,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_133_iso2k",
+        "dataSetName": "CO96QUVA",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_133",
+        "dataSetName": "Ocn-Vanuatu.Quinn.1996",
+        "decision": "keep"
+      },
+      {
+        "tsid": "QU96ESV01_d18O",
+        "dataSetName": "QU96ESV01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 97,
+    "records": [
+      {
+        "tsid": "CO96SWBB01A",
+        "dataSetName": "CO96SWBB",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_118",
+        "dataSetName": "Ocn-BiscayneBay.Swart.1996",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 98,
+    "records": [
+      {
+        "tsid": "CO96SWFB01A",
+        "dataSetName": "CO96SWFB",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_116",
+        "dataSetName": "Ocn-FloridaBay.Swart.1996",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO99SWFB01A",
+        "dataSetName": "CO99SWFB",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO99SWFB02A",
+        "dataSetName": "CO99SWFB",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 99,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_135_iso2k",
+        "dataSetName": "CO98EVXM",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_135",
+        "dataSetName": "Ocn-Kiritimati.Evans.1998",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 100,
+    "records": [
+      {
+        "tsid": "CO98SWPR01A",
+        "dataSetName": "CO98SWPR",
+        "decision": "keep"
+      },
+      {
+        "tsid": "SW98STP01_d18O",
+        "dataSetName": "SW98STP01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 101,
+    "records": [
+      {
+        "tsid": "CO99DRGB01A",
+        "dataSetName": "CO99DRGB",
+        "decision": "keep"
+      },
+      {
+        "tsid": "DR99ABR01_d18O",
+        "dataSetName": "DR99ABR01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_167",
+        "dataSetName": "Ocn-AbrahamReef.Druffel.1999",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 102,
+    "records": [
+      {
+        "tsid": "CO99GUMI01A",
+        "dataSetName": "CO99GUMI",
+        "decision": "keep"
+      },
+      {
+        "tsid": "GU99NAU01_d18O",
+        "dataSetName": "GU99NAU01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "GU99NAU02_d18O",
+        "dataSetName": "GU99NAU02",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_179",
+        "dataSetName": "Ocn-Nauru.Guilderson.1999",
+        "decision": "keep"
+      },
+      {
+        "tsid": "CO99GUMI01B",
+        "dataSetName": "CO99GUMI",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 103,
+    "records": [
+      {
+        "tsid": "DE12ANC01_SrCa",
+        "dataSetName": "DE12ANC01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_134",
+        "dataSetName": "Ocn-AmedeeIsland.DeLong.2012",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 104,
+    "records": [
+      {
+        "tsid": "Eur_009",
+        "dataSetName": "Eur-RAPiD-17-5P.Moffa-Sanchez.2014",
+        "decision": "keep"
+      },
+      {
+        "tsid": "MS14MORR01b",
+        "dataSetName": "MS14MORR",
+        "decision": "keep"
+      },
+      {
+        "tsid": "MS14MORR01a",
+        "dataSetName": "MS14MORR",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 105,
+    "records": [
+      {
+        "tsid": "Eur_001",
+        "dataSetName": "Eur-SpannagelCave.Mangini.2005",
+        "decision": "keep"
+      },
+      {
+        "tsid": "SP05MAAT01A",
+        "dataSetName": "SP05MAAT",
+        "decision": "keep"
+      },
+      {
+        "tsid": "SP12FOAT01A",
+        "dataSetName": "SP12FOAT",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 106,
+    "records": [
+      {
+        "tsid": "FE09OGA01_SrCa",
+        "dataSetName": "FE09OGA01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_164",
+        "dataSetName": "Ocn-Miyanohama.Felis.2009",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 107,
+    "records": [
+      {
+        "tsid": "HE10GUA01_SrCa",
+        "dataSetName": "HE10GUA01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_098",
+        "dataSetName": "Ocn-Guadeloupe.Steinhilber.2010",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 108,
+    "records": [
+      {
+        "tsid": "SAm_035_iso2k",
+        "dataSetName": "IC13THQU",
+        "decision": "keep"
+      },
+      {
+        "tsid": "SAm_035",
+        "dataSetName": "SAm-QuelccayaIceCap.Thompson.2013",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 109,
+    "records": [
+      {
+        "tsid": "KI04MCV01_SrCa",
+        "dataSetName": "KI04MCV01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_175",
+        "dataSetName": "Ocn-MaloChannelEspirituSantoIsland.Kilbourne.2004",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 110,
+    "records": [
+      {
+        "tsid": "LI00RAR01_SrCa",
+        "dataSetName": "LI00RAR01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_149",
+        "dataSetName": "Ocn-RarotongaSrCa2r.Linsley.2006",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 111,
+    "records": [
+      {
+        "tsid": "NAm_3870",
+        "dataSetName": "NAm-OregonCaves.Ersek.2012",
+        "decision": "keep"
+      },
+      {
+        "tsid": "SP12ERUS01A",
+        "dataSetName": "SP12ERUS",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 112,
+    "records": [
+      {
+        "tsid": "NU11PAL01_SrCa",
+        "dataSetName": "NU11PAL01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_161",
+        "dataSetName": "Ocn-Palmyra.Nurhati.2011",
+        "decision": "keep"
+      },
+      {
+        "tsid": "SA19PAL01_SrCa",
+        "dataSetName": "SA19PAL01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "SA19PAL02_SrCa",
+        "dataSetName": "SA19PAL02",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 113,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_189",
+        "dataSetName": "Ocn-Clipperton1b.Wu.2014",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WU14CLI01_SrCa",
+        "dataSetName": "WU14CLI01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_185",
+        "dataSetName": "Ocn-Clipperton2b.Wu.2014",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_187",
+        "dataSetName": "Ocn-Clipperton4b.Wu.2014",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_186",
+        "dataSetName": "Ocn-Clipperton6a.Wu.2014",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 114,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_190",
+        "dataSetName": "Ocn-GBR.Wei.2009",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WE09ARR01_d18O",
+        "dataSetName": "WE09ARR01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 115,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_191",
+        "dataSetName": "Ocn-GBR.Wei.2009",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WE09ARR01_SrCa",
+        "dataSetName": "WE09ARR01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 116,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_159",
+        "dataSetName": "Ocn-HaferaIsland.Wu.2013",
+        "decision": "keep"
+      },
+      {
+        "tsid": "WU13TON01_SrCa",
+        "dataSetName": "WU13TON01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 117,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_025",
+        "dataSetName": "Ocn-HoutmanAbrolhosHAB05B.Zinke.2014",
+        "decision": "keep"
+      },
+      {
+        "tsid": "ZI14HOU01_SrCa",
+        "dataSetName": "ZI14HOU01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_027",
+        "dataSetName": "Ocn-HoutmanAbrolhosHAB10A.Zinke.2014",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 118,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_141",
+        "dataSetName": "Ocn-LaingIslandPapuaNewGuinea.Tudhope.2001",
+        "decision": "keep"
+      },
+      {
+        "tsid": "TU01LAI01_d18O",
+        "dataSetName": "TU01LAI01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 119,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_002",
+        "dataSetName": "Ocn-Mayotte.Zinke.2008",
+        "decision": "keep"
+      },
+      {
+        "tsid": "ZI08MAY01_d18O",
+        "dataSetName": "ZI08MAY01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "ZI08MAY01_d18O_sw",
+        "dataSetName": "ZI08MAY01",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_005",
+        "dataSetName": "Ocn-Mayotte.Zinke.2008",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 120,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_003",
+        "dataSetName": "Ocn-Mayotte.Zinke.2008",
+        "decision": "keep"
+      },
+      {
+        "tsid": "ZI08MAY01_SrCa",
+        "dataSetName": "ZI08MAY01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 121,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_126",
+        "dataSetName": "Ocn-MontegoBayJamaica.Haase-Schramm.2003",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_126_iso2k",
+        "dataSetName": "SS03HAJA",
+        "decision": "keep"
+      },
+      {
+        "tsid": "Ocean2kHR_128_iso2k",
+        "dataSetName": "SS03HAJA",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 122,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_181",
+        "dataSetName": "Ocn-PalauRockIslands.Osborne.2014",
+        "decision": "keep"
+      },
+      {
+        "tsid": "OS14RIP01_d18O",
+        "dataSetName": "OS14RIP01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "groupId": 123,
+    "records": [
+      {
+        "tsid": "Ocean2kHR_145",
+        "dataSetName": "Ocn-Rabaul.Quinn.2006",
+        "decision": "keep"
+      },
+      {
+        "tsid": "QU06RAB01_SrCa",
+        "dataSetName": "QU06RAB01",
+        "decision": "keep"
+      }
+    ],
+    "notes": null
+  }
+]
