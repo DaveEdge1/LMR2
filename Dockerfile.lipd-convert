@@ -1,0 +1,10 @@
+# Slim image for lipd_to_pdb.py — converts LiPD zip to CFR ProxyDatabase pickle.
+# ~200MB vs multi-GB for the full lmr2 image.
+FROM python:3.11-slim
+
+RUN pip install --no-cache-dir \
+    numpy==1.26.4 \
+    pandas==2.1.4 \
+    pylipd==1.5.1
+
+WORKDIR /app
