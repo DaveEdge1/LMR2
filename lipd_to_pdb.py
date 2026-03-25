@@ -359,15 +359,19 @@ def main():
     SKIP_BAD_COORDS      = 'missing/invalid coordinates'
     SKIP_REMOVED_TSID    = 'user-removed TSID (removedTsids)'
 
-    skip_reasons = Counter()       # reason → count
-    skip_by_ptype = Counter()      # (reason, archive) → count
+    skip_records = []              # per-record details for CSV
 
     def _skip(reason, row, archive=None):
         nonlocal n_skip
         n_skip += 1
-        skip_reasons[reason] += 1
         arch = archive or str(row.get('archiveType') or row.get('archive') or 'unknown').lower().strip()
-        skip_by_ptype[(reason, arch)] += 1
+        skip_records.append({
+            'dataSetName': str(row.get('dataSetName') or ''),
+            'TSID': str(row.get('TSID') or row.get('paleoData_TSID') or ''),
+            'variableName': str(row.get('paleoData_variableName') or ''),
+            'archiveType': arch,
+            'reason': reason,
+        })
 
     for row in proxy_rows:
         vname = str(row.get('paleoData_variableName') or '').strip()
@@ -445,13 +449,14 @@ def main():
     print(f"\nProxy records: {n_ok} added, {n_skip} skipped (of {len(proxy_rows)} candidates)")
 
     # ── Skip reason breakdown ────────────────────────────────────────────────
-    if skip_reasons:
+    if skip_records:
+        skip_df = pd.DataFrame(skip_records)
+        reason_counts = skip_df['reason'].value_counts()
         print("\nSkipped records breakdown by reason:")
-        for reason, count in skip_reasons.most_common():
+        for reason, count in reason_counts.items():
             print(f"  {reason:<50} {count:>4} records")
-            # Show per-archive-type detail for this reason
-            archive_counts = {arch: cnt for (r, arch), cnt in skip_by_ptype.items() if r == reason}
-            for arch, cnt in sorted(archive_counts.items(), key=lambda x: -x[1]):
+            arch_counts = skip_df[skip_df['reason'] == reason]['archiveType'].value_counts()
+            for arch, cnt in arch_counts.items():
                 print(f"    {arch:<48} {cnt:>4}")
 
     if n_ok == 0:
@@ -466,6 +471,24 @@ def main():
     print("\nProxy type breakdown:")
     for pt, cnt in ptypes.items():
         print(f"  {pt:<40} {cnt:>4} records")
+
+    # ── Save CSVs to prepare-data/ directory ─────────────────────────────────
+    output_dir = os.path.dirname(output_path)
+    prep_dir = os.path.join(output_dir, 'prepare-data')
+    os.makedirs(prep_dir, exist_ok=True)
+
+    skip_csv = os.path.join(prep_dir, 'skipped_records.csv')
+    if skip_records:
+        skip_df.to_csv(skip_csv, index=False)
+        print(f"\nSaved {len(skip_records)} skipped records to {skip_csv}")
+    else:
+        pd.DataFrame(columns=['dataSetName', 'TSID', 'variableName', 'archiveType', 'reason']).to_csv(skip_csv, index=False)
+        print(f"\nNo skipped records — saved empty {skip_csv}")
+
+    ptype_csv = os.path.join(prep_dir, 'proxy_type_breakdown.csv')
+    ptype_df = pd.DataFrame({'ptype': ptypes.index, 'count': ptypes.values})
+    ptype_df.to_csv(ptype_csv, index=False)
+    print(f"Saved proxy type breakdown to {ptype_csv}")
 
     print(f"\nSaving proxy DataFrame to {output_path} ...")
     df.to_pickle(output_path)

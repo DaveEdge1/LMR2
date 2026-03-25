@@ -167,7 +167,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: lipd-cfr-data-${{ github.run_id }}
-          path: lipd_cfr.pkl
+          path: |
+            lipd_cfr.pkl
+            prepare-data/
           retention-days: 7
 
   # ── Job 2: Run CFR reconstruction ─────────────────────────────────────────
