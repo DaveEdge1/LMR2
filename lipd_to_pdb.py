@@ -336,13 +336,22 @@ def main():
                            if not str(rows[0].get(k, '')).startswith('[')]
             print(f"Sample row keys: {sample_keys[:30]}")
 
+    # ── Pre-filter: separate proxy candidates from time/depth/metadata rows ──
+    proxy_rows = []
+    n_meta = 0
+    for row in rows:
+        vname = str(row.get('paleoData_variableName') or '').strip()
+        if not vname or _is_time_var(vname) or _is_skip_var(vname):
+            n_meta += 1
+            continue
+        proxy_rows.append(row)
+    print(f"Filtered {n_meta} time/depth/metadata rows, {len(proxy_rows)} proxy candidates remain")
+
     # ── Build DataFrame (cfr.ProxyDatabase.fetch expects pd.read_pickle → from_df) ──
     df_rows = []
     n_ok    = 0
     n_skip  = 0
 
-    # Track skip reasons: reason_key → list of (tsid, archive, vname) tuples
-    SKIP_TIME_DEPTH_META = 'time/depth/metadata variable'
     SKIP_MISSING_VALUES  = 'missing proxy values'
     SKIP_MISSING_TIME    = 'missing time axis'
     SKIP_ALL_NAN         = 'no valid time-value pairs (all NaN)'
@@ -351,41 +360,35 @@ def main():
     SKIP_REMOVED_TSID    = 'user-removed TSID (removedTsids)'
 
     skip_reasons = Counter()       # reason → count
-    skip_by_ptype = Counter()      # (reason, ptype_or_archive) → count
+    skip_by_ptype = Counter()      # (reason, archive) → count
 
-    def _skip(reason, row, archive=None, vname=None):
+    def _skip(reason, row, archive=None):
         nonlocal n_skip
         n_skip += 1
         skip_reasons[reason] += 1
-        # Use archive type for grouping; fall back to 'unknown'
         arch = archive or str(row.get('archiveType') or row.get('archive') or 'unknown').lower().strip()
         skip_by_ptype[(reason, arch)] += 1
 
-    for row in rows:
+    for row in proxy_rows:
         vname = str(row.get('paleoData_variableName') or '').strip()
         archive = str(row.get('archiveType') or row.get('archive') or '').lower().strip()
-
-        # Skip time/depth/metadata variables
-        if not vname or _is_time_var(vname) or _is_skip_var(vname):
-            _skip(SKIP_TIME_DEPTH_META, row, archive, vname)
-            continue
 
         # Check removedTsids before doing expensive array work
         tsid = str(row.get('TSID') or row.get('paleoData_TSID') or '')
         if removed_tsids and tsid and tsid in removed_tsids:
-            _skip(SKIP_REMOVED_TSID, row, archive, vname)
+            _skip(SKIP_REMOVED_TSID, row, archive)
             continue
 
         # Proxy values
         val_arr = _to_float_array(row.get('paleoData_values'))
         if val_arr is None:
-            _skip(SKIP_MISSING_VALUES, row, archive, vname)
+            _skip(SKIP_MISSING_VALUES, row, archive)
             continue
 
         # Time axis
         time_raw, time_vname = _get_time_from_row(row)
         if time_raw is None:
-            _skip(SKIP_MISSING_TIME, row, archive, vname)
+            _skip(SKIP_MISSING_TIME, row, archive)
             continue
         time_arr = time_to_year_ce(time_raw, time_vname,
                                     row.get('time_standardName', ''))
@@ -395,7 +398,7 @@ def main():
         time_arr, val_arr = time_arr[:n], val_arr[:n]
         mask = np.isfinite(time_arr) & np.isfinite(val_arr)
         if not mask.any():
-            _skip(SKIP_ALL_NAN, row, archive, vname)
+            _skip(SKIP_ALL_NAN, row, archive)
             continue
         time_arr, val_arr = time_arr[mask], val_arr[mask]
         idx = np.argsort(time_arr)
@@ -404,7 +407,7 @@ def main():
         # Skip constant-value records: OLS slope=0 → varye=0, MSE=0 → ob_err=0
         # → kdenom=0 → EnKF Kalman gain blows up
         if np.std(val_arr) < 1e-6:
-            _skip(SKIP_CONSTANT, row, archive, vname)
+            _skip(SKIP_CONSTANT, row, archive)
             continue
 
         # Coordinates
@@ -413,7 +416,7 @@ def main():
             lon  = _get_scalar(row, 'geo_meanLon',  'geo_meanLongitude', 'longitude')
             elev = _get_scalar(row, 'geo_meanElev', 'geo_meanElevation', 'elevation')
         except Exception:
-            _skip(SKIP_BAD_COORDS, row, archive, vname)
+            _skip(SKIP_BAD_COORDS, row, archive)
             continue
 
         # Proxy type
@@ -439,7 +442,7 @@ def main():
         })
         n_ok += 1
 
-    print(f"\nProxy records: {n_ok} added, {n_skip} skipped")
+    print(f"\nProxy records: {n_ok} added, {n_skip} skipped (of {len(proxy_rows)} candidates)")
 
     # ── Skip reason breakdown ────────────────────────────────────────────────
     if skip_reasons:
