@@ -89,12 +89,18 @@ jobs:
       - name: Generate LiPD data from query
         if: steps.pathway.outputs.pathway == 'github_actions' && steps.pathway.outputs.mode == 'filtered'
         run: |
-          echo "Querying lipdverse and generating .lpd files using lipdGenerator container..."
+          echo "Querying lipdverse using query_params.json (see file for full TSID list)..."
+          echo "  mode:         $(jq -r '.mode' query_params.json)"
+          echo "  compilation:  $(jq -r '.compilation' query_params.json)"
+          echo "  version:      $(jq -r '.version' query_params.json)"
+          echo "  tsids:        $(jq '.tsids | length' query_params.json) requested"
+          echo "  removedTsids: $(jq '.removedTsids | length' query_params.json) to remove"
           mkdir -p lipd_output
           docker run --rm \
             -v $(pwd)/query_params.json:/query_params.json:ro \
             -v $(pwd)/lipd_output:/output \
-            davidedge/lipd_webapps:lipdGenerator /query_params.json /output lpd
+            davidedge/lipd_webapps:lipdGenerator /query_params.json /output lpd 2>&1 \
+            | tail -20
 
           if [ ! -f lipd_output/lipd_files.zip ]; then
             echo "ERROR: lipdGenerator did not produce lipd_files.zip"
