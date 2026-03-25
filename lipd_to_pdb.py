@@ -285,14 +285,26 @@ def main():
         n_files = sum(1 for f in os.listdir(tmpdir) if f.endswith('.lpd'))
         print(f"Extracted {n_files} .lpd files")
 
-        print("\nLoading with pylipd ...")
-        L = LiPD()
-        L.load_from_dir(tmpdir)
-        all_ds = L.get_all_dataset_names()
+        print("\nLoading with pylipd (muting verbose output) ...")
+        with open(os.devnull, 'w') as devnull:
+            _real_stdout, _real_stderr = sys.stdout, sys.stderr
+            sys.stdout, sys.stderr = devnull, devnull
+            try:
+                L = LiPD()
+                L.load_from_dir(tmpdir)
+                all_ds = L.get_all_dataset_names()
+            finally:
+                sys.stdout, sys.stderr = _real_stdout, _real_stderr
         print(f"Loaded {len(all_ds)} datasets")
 
-        print("\nExtracting time series via pylipd get_timeseries() ...")
-        result = L.get_timeseries(all_ds)
+        print("Extracting time series via pylipd get_timeseries() ...")
+        with open(os.devnull, 'w') as devnull:
+            _real_stdout, _real_stderr = sys.stdout, sys.stderr
+            sys.stdout, sys.stderr = devnull, devnull
+            try:
+                result = L.get_timeseries(all_ds)
+            finally:
+                sys.stdout, sys.stderr = _real_stdout, _real_stderr
 
         # Normalise whatever get_timeseries() returns into a flat list of dicts.
         # pylipd API has varied across versions:
@@ -329,12 +341,6 @@ def main():
                 "and that .lpd files were loaded correctly"
             )
         print(f"Got {len(rows)} time series")
-
-        # Print available keys from first row for diagnostics
-        if rows:
-            sample_keys = [k for k in rows[0].keys()
-                           if not str(rows[0].get(k, '')).startswith('[')]
-            print(f"Sample row keys: {sample_keys[:30]}")
 
     # ── Pre-filter: separate proxy candidates from time/depth/metadata rows ──
     proxy_rows = []
