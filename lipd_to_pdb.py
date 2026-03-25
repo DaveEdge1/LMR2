@@ -14,8 +14,10 @@ import sys
 import os
 import re
 import math
+import json
 import zipfile
 import tempfile
+from collections import Counter
 
 import numpy as np
 import pandas as pd
@@ -260,8 +262,21 @@ def main():
 
     zip_path    = sys.argv[1]
     output_path = sys.argv[2]
+    qp_path     = sys.argv[3] if len(sys.argv) > 3 else None
     print(f"Input:  {zip_path}")
     print(f"Output: {output_path}")
+
+    # Load removedTsids from query_params.json if provided
+    removed_tsids = set()
+    if qp_path and os.path.isfile(qp_path):
+        print(f"Query params: {qp_path}")
+        with open(qp_path) as f:
+            qp = json.load(f)
+        removed_tsids = set(qp.get('removedTsids') or [])
+        if removed_tsids:
+            print(f"  Will remove {len(removed_tsids)} TSIDs from removedTsids list")
+    else:
+        print("Query params: not provided (removedTsids filter disabled)")
 
     with tempfile.TemporaryDirectory() as tmpdir:
         print(f"\nUnzipping {zip_path} ...")
@@ -326,24 +341,51 @@ def main():
     n_ok    = 0
     n_skip  = 0
 
+    # Track skip reasons: reason_key → list of (tsid, archive, vname) tuples
+    SKIP_TIME_DEPTH_META = 'time/depth/metadata variable'
+    SKIP_MISSING_VALUES  = 'missing proxy values'
+    SKIP_MISSING_TIME    = 'missing time axis'
+    SKIP_ALL_NAN         = 'no valid time-value pairs (all NaN)'
+    SKIP_CONSTANT        = 'constant value (zero variance → EnKF blow-up)'
+    SKIP_BAD_COORDS      = 'missing/invalid coordinates'
+    SKIP_REMOVED_TSID    = 'user-removed TSID (removedTsids)'
+
+    skip_reasons = Counter()       # reason → count
+    skip_by_ptype = Counter()      # (reason, ptype_or_archive) → count
+
+    def _skip(reason, row, archive=None, vname=None):
+        nonlocal n_skip
+        n_skip += 1
+        skip_reasons[reason] += 1
+        # Use archive type for grouping; fall back to 'unknown'
+        arch = archive or str(row.get('archiveType') or row.get('archive') or 'unknown').lower().strip()
+        skip_by_ptype[(reason, arch)] += 1
+
     for row in rows:
         vname = str(row.get('paleoData_variableName') or '').strip()
+        archive = str(row.get('archiveType') or row.get('archive') or '').lower().strip()
 
         # Skip time/depth/metadata variables
         if not vname or _is_time_var(vname) or _is_skip_var(vname):
-            n_skip += 1
+            _skip(SKIP_TIME_DEPTH_META, row, archive, vname)
+            continue
+
+        # Check removedTsids before doing expensive array work
+        tsid = str(row.get('TSID') or row.get('paleoData_TSID') or '')
+        if removed_tsids and tsid and tsid in removed_tsids:
+            _skip(SKIP_REMOVED_TSID, row, archive, vname)
             continue
 
         # Proxy values
         val_arr = _to_float_array(row.get('paleoData_values'))
         if val_arr is None:
-            n_skip += 1
+            _skip(SKIP_MISSING_VALUES, row, archive, vname)
             continue
 
         # Time axis
         time_raw, time_vname = _get_time_from_row(row)
         if time_raw is None:
-            n_skip += 1
+            _skip(SKIP_MISSING_TIME, row, archive, vname)
             continue
         time_arr = time_to_year_ce(time_raw, time_vname,
                                     row.get('time_standardName', ''))
@@ -353,7 +395,7 @@ def main():
         time_arr, val_arr = time_arr[:n], val_arr[:n]
         mask = np.isfinite(time_arr) & np.isfinite(val_arr)
         if not mask.any():
-            n_skip += 1
+            _skip(SKIP_ALL_NAN, row, archive, vname)
             continue
         time_arr, val_arr = time_arr[mask], val_arr[mask]
         idx = np.argsort(time_arr)
@@ -362,7 +404,7 @@ def main():
         # Skip constant-value records: OLS slope=0 → varye=0, MSE=0 → ob_err=0
         # → kdenom=0 → EnKF Kalman gain blows up
         if np.std(val_arr) < 1e-6:
-            n_skip += 1
+            _skip(SKIP_CONSTANT, row, archive, vname)
             continue
 
         # Coordinates
@@ -371,7 +413,7 @@ def main():
             lon  = _get_scalar(row, 'geo_meanLon',  'geo_meanLongitude', 'longitude')
             elev = _get_scalar(row, 'geo_meanElev', 'geo_meanElevation', 'elevation')
         except Exception:
-            n_skip += 1
+            _skip(SKIP_BAD_COORDS, row, archive, vname)
             continue
 
         # Proxy type
@@ -379,12 +421,10 @@ def main():
                        row.get('paleoData_proxy')         or
                        row.get('paleoData_proxyGeneral')  or
                        vname)
-        archive  = str(row.get('archiveType') or row.get('archive') or '')
         ptype    = create_ptype(archive, std_name)
 
         # Record ID
-        pid = str(row.get('TSID') or row.get('paleoData_TSID') or
-                  row.get('dataSetName') or f'record_{n_ok}')
+        pid = str(tsid or row.get('dataSetName') or f'record_{n_ok}')
 
         df_rows.append({
             'paleoData_pages2kID':    pid,
@@ -400,6 +440,16 @@ def main():
         n_ok += 1
 
     print(f"\nProxy records: {n_ok} added, {n_skip} skipped")
+
+    # ── Skip reason breakdown ────────────────────────────────────────────────
+    if skip_reasons:
+        print("\nSkipped records breakdown by reason:")
+        for reason, count in skip_reasons.most_common():
+            print(f"  {reason:<50} {count:>4} records")
+            # Show per-archive-type detail for this reason
+            archive_counts = {arch: cnt for (r, arch), cnt in skip_by_ptype.items() if r == reason}
+            for arch, cnt in sorted(archive_counts.items(), key=lambda x: -x[1]):
+                print(f"    {arch:<48} {cnt:>4}")
 
     if n_ok == 0:
         raise RuntimeError(

@@ -126,10 +126,11 @@ jobs:
           docker run --rm \
             -v $(pwd)/lipd_output/lipd_files.zip:/app/lipd_files.zip:ro \
             -v $(pwd)/lipd_to_pdb.py:/app/lipd_to_pdb.py:ro \
+            -v $(pwd)/query_params.json:/app/query_params.json:ro \
             -v $(pwd):/output \
             -w /app \
             davidedge/lmr2:latest \
-            conda run -n cfr-env python lipd_to_pdb.py lipd_files.zip /output/lipd_cfr.pkl
+            conda run -n cfr-env python lipd_to_pdb.py lipd_files.zip /output/lipd_cfr.pkl query_params.json
 
       # ARCHIVED / TRADITIONAL PATHWAY: legacy LiPD dict pickle → CFR DataFrame
       - name: Convert LiPD format (archived/traditional pathway)
