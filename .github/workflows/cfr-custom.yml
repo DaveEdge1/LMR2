@@ -121,13 +121,13 @@ jobs:
             exit 1
           fi
 
-      - name: Pull Docker image
-        run: docker pull davidedge/lmr2:latest
-
-      # FILTERED PATHWAY: lipd_files.zip → cfr.ProxyDatabase (direct JSON parsing, no SPARQL)
+      # FILTERED PATHWAY: lipd_files.zip → cfr.ProxyDatabase
+      # Uses slim lipd-convert image (~200MB) instead of full lmr2 (multi-GB)
       - name: Convert LiPD to ProxyDatabase (filtered pathway)
         if: steps.pathway.outputs.pathway == 'github_actions' && steps.pathway.outputs.mode == 'filtered'
         run: |
+          echo "Pulling slim lipd-convert image..."
+          docker pull davidedge/lipd-convert:latest
           echo "Converting .lpd files to cfr.ProxyDatabase using lipd_to_pdb.py ..."
           docker run --rm \
             -v $(pwd)/lipd_output/lipd_files.zip:/app/lipd_files.zip:ro \
@@ -135,13 +135,15 @@ jobs:
             -v $(pwd)/query_params.json:/app/query_params.json:ro \
             -v $(pwd):/output \
             -w /app \
-            davidedge/lmr2:latest \
-            conda run -n cfr-env python lipd_to_pdb.py lipd_files.zip /output/lipd_cfr.pkl query_params.json
+            davidedge/lipd-convert:latest \
+            python lipd_to_pdb.py lipd_files.zip /output/lipd_cfr.pkl query_params.json
 
       # ARCHIVED / TRADITIONAL PATHWAY: legacy LiPD dict pickle → CFR DataFrame
       - name: Convert LiPD format (archived/traditional pathway)
         if: steps.pathway.outputs.mode != 'filtered'
         run: |
+          echo "Pulling full lmr2 image..."
+          docker pull davidedge/lmr2:latest
           echo "Converting LiPD pickle to CFR format using convert_lipd_to_cfr_dataframe.py ..."
           docker run --rm \
             -v $(pwd)/lipd_data.pkl:/app/lipd_data.pkl:ro \
