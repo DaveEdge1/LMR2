@@ -89,18 +89,12 @@ jobs:
       - name: Generate LiPD data from query
         if: steps.pathway.outputs.pathway == 'github_actions' && steps.pathway.outputs.mode == 'filtered'
         run: |
-          echo "Querying lipdverse using query_params.json (see file for full TSID list)..."
-          echo "  mode:         $(jq -r '.mode' query_params.json)"
-          echo "  compilation:  $(jq -r '.compilation' query_params.json)"
-          echo "  version:      $(jq -r '.version' query_params.json)"
-          echo "  tsids:        $(jq '.tsids | length' query_params.json) requested"
-          echo "  removedTsids: $(jq '.removedTsids | length' query_params.json) to remove"
+          echo "Querying lipdverse and generating .lpd files using lipdGenerator container..."
           mkdir -p lipd_output
           docker run --rm \
             -v $(pwd)/query_params.json:/query_params.json:ro \
             -v $(pwd)/lipd_output:/output \
-            davidedge/lipd_webapps:lipdGenerator /query_params.json /output lpd 2>&1 \
-            | tail -20
+            davidedge/lipd_webapps:lipdGenerator /query_params.json /output lpd
 
           if [ ! -f lipd_output/lipd_files.zip ]; then
             echo "ERROR: lipdGenerator did not produce lipd_files.zip"
@@ -121,33 +115,30 @@ jobs:
             exit 1
           fi
 
-      # FILTERED PATHWAY: lipd_files.zip → cfr.ProxyDatabase
-      # Uses slim lipd-convert image (~200MB) instead of full lmr2 (multi-GB)
+      - name: Pull Docker image
+        run: docker pull davidedge/lmr2:latest
+
+      # FILTERED PATHWAY: lipd_files.zip → cfr.ProxyDatabase (direct JSON parsing, no SPARQL)
       - name: Convert LiPD to ProxyDatabase (filtered pathway)
         if: steps.pathway.outputs.pathway == 'github_actions' && steps.pathway.outputs.mode == 'filtered'
         run: |
-          echo "Pulling slim lipd-convert image..."
-          docker pull davidedge/lipd-convert:latest
           echo "Converting .lpd files to cfr.ProxyDatabase using lipd_to_pdb.py ..."
           docker run --rm \
             -v $(pwd)/lipd_output/lipd_files.zip:/app/lipd_files.zip:ro \
-            -v $(pwd)/lipd_to_pdb.py:/app/lipd_to_pdb.py:ro \
-            -v $(pwd)/query_params.json:/app/query_params.json:ro \
+            -v $(pwd)/scripts/lipd_to_pdb.py:/app/lipd_to_pdb.py:ro \
             -v $(pwd):/output \
             -w /app \
-            davidedge/lipd-convert:latest \
-            python lipd_to_pdb.py lipd_files.zip /output/lipd_cfr.pkl query_params.json
+            davidedge/lmr2:latest \
+            conda run -n cfr-env python lipd_to_pdb.py lipd_files.zip /output/lipd_cfr.pkl
 
       # ARCHIVED / TRADITIONAL PATHWAY: legacy LiPD dict pickle → CFR DataFrame
       - name: Convert LiPD format (archived/traditional pathway)
         if: steps.pathway.outputs.mode != 'filtered'
         run: |
-          echo "Pulling full lmr2 image..."
-          docker pull davidedge/lmr2:latest
           echo "Converting LiPD pickle to CFR format using convert_lipd_to_cfr_dataframe.py ..."
           docker run --rm \
             -v $(pwd)/lipd_data.pkl:/app/lipd_data.pkl:ro \
-            -v $(pwd)/convert_lipd_to_cfr_dataframe.py:/app/convert_lipd_to_cfr_dataframe.py:ro \
+            -v $(pwd)/scripts/convert_lipd_to_cfr_dataframe.py:/app/convert_lipd_to_cfr_dataframe.py:ro \
             -v $(pwd):/output \
             -w /app \
             davidedge/lmr2:latest \
@@ -167,9 +158,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: lipd-cfr-data-${{ github.run_id }}
-          path: |
-            lipd_cfr.pkl
-            prepare-data/
+          path: lipd_cfr.pkl
           retention-days: 7
 
   # ── Job 2: Run CFR reconstruction ─────────────────────────────────────────
@@ -201,7 +190,7 @@ jobs:
         run: |
           echo "Running LMR CFR reconstruction..."
           docker run --rm \
-            -v $(pwd)/cfr_main_code.py:/app/cfr_main_code.py:ro \
+            -v $(pwd)/scripts/cfr_main_code.py:/app/cfr_main_code.py:ro \
             -v $(pwd)/lmr_configs.yml:/app/user_config.yml:ro \
             -v $(pwd)/lipd_cfr.pkl:/app/lipd_cfr.pkl:ro \
             -v $(pwd)/recons:/recons \
@@ -221,7 +210,7 @@ jobs:
       - name: Combine seed runs into combined_recon.nc
         run: |
           echo "Combining all seed runs into combined_recon.nc for visualization..."
-          docker run --rm             -v $(pwd)/combine_seeds.py:/app/combine_seeds.py:ro             -v $(pwd)/recons:/recons             davidedge/lmr2:latest             python /app/combine_seeds.py
+          docker run --rm             -v $(pwd)/scripts/combine_seeds.py:/app/combine_seeds.py:ro             -v $(pwd)/recons:/recons             davidedge/lmr2:latest             python /app/combine_seeds.py
 
       - name: Upload reconstruction results
         uses: actions/upload-artifact@v4
