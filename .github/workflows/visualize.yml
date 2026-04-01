@@ -90,7 +90,6 @@ jobs:
   visualize:
     name: Generate Presto Visualization
     needs: [find-latest-cfr-run, download-cfr-artifact]
-    # TODO: Switch to fix branch after applying fix to presto-viz - see .github/PRESTO_VIZ_FIX.md
     # uses: DaveEdge1/presto-viz/.github/workflows/presto-viz-reusable.yml@fix/cfr-dimension-order
     uses: DaveEdge1/presto-viz/.github/workflows/presto-viz-reusable.yml@main
     with:
