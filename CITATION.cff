@@ -71,3 +71,27 @@ references:
     end: 6764
     year: 2016
     doi: 10.1002/2016JD024751
+  - type: article
+    title: "cfr (v2024.1.26): a Python package for climate field reconstruction"
+    authors:
+      - family-names: Zhu
+        given-names: F.
+      - family-names: Emile-Geay
+        given-names: J.
+      - family-names: Hakim
+        given-names: G. J.
+      - family-names: Guillot
+        given-names: D.
+      - family-names: Khider
+        given-names: D.
+      - family-names: Tardif
+        given-names: R.
+      - family-names: Perkins
+        given-names: W. A.
+    journal: "Geoscientific Model Development"
+    volume: 17
+    issue: 8
+    start: 3409
+    end: 3431
+    year: 2024
+    doi: 10.5194/gmd-17-3409-2024

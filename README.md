@@ -1,24 +1,55 @@
-[![DOI](https://zenodo.org/badge/1078431321.svg)](https://doi.org/10.5281/zenodo.17819391)  
+[![DOI](https://zenodo.org/badge/1078431321.svg)](https://doi.org/10.5281/zenodo.17819391)
 
-## 3-Component Architecture Example
+# PReSto LMR Template
 
 By [David Edge](https://orcid.org/0000-0001-6938-2850), [Tanaya Gondhalekar](https://orcid.org/0009-0004-2440-3266), & [Julien Emile-Geay](https://orcid.org/0000-0001-5920-4751).
 
-[PReSto](paleopresto.com) lowers the barriers to utilyzing, reproducing, and customizing paleoclimate reconstructions. 
+[PReSto](https://paleopresto.com) (Paleoclimate Reconstruction Storehouse) lowers the barriers to utilizing, reproducing, and customizing paleoclimate reconstructions. This repository is a template used by PReSto to run the Last Millennium Reanalysis (LMR) via GitHub Actions.
 
-This repository showcases the use of containers, paramter files (yaml), and GitHub Actions to reproduce and customize the Last Millennium Reanalysis, version 2.1 (Tardif et al, 2019), which used the offline data assimilation method of Hakim et al. (2016) together with the PAGES 2k database, version 2.0.0. More information on reproducing LMRv2 interactively can be found [here](https://github.com/tanaya-g/LMR_reproduce).
+## LMR Method
 
-### How to use this repository
+This template reproduces and customizes the Last Millennium Reanalysis, version 2.1 ([Tardif et al., 2019](https://doi.org/10.5194/cp-15-1251-2019)), which uses the offline data assimilation method of [Hakim et al. (2016)](https://doi.org/10.1002/2016JD024751). The reconstruction is implemented using the [cfr](https://fzhu2e.github.io/cfr/) Python package ([Zhu et al., 2024](https://doi.org/10.5194/gmd-17-3409-2024)).
 
-#### Clone and use   
-You can use a clone of this repo to run LMRv2 yourself. Simply
-- clone the repo
-- make any edits you would like to the reconstruction configs (lmr_configs.yml) following the instructions from [cfr](https://fzhu2e.github.io/cfr/ug-lmr.html)
-- the Run CFR action
-  - automatically initiated when changes to lmr_configs.yml are pushed
-  - can be manually initiated on the Actions tab of the cloned repo
-- reconstruction data are saved for 30 days
+Proxy observations are drawn from either:
+- **Archived compilations** (e.g., PAGES 2k v2) downloaded directly from [LiPDverse](https://lipdverse.org)
+- **Filtered selections** queried from LiPDverse via PReSto's interactive map interface
 
-### Note on repository structure
+The prior is CCSM4 Last Millennium simulation (850–1850 CE) for surface temperature (`tas`) and precipitation (`pr`).
 
-The Dockerfile and associated workflow file show the construction of the container where the computation takes place. This code is kept within this repo to show the provenance of the container environment. Altering the container image allows for future updates to the reconstruction methods but requires utilyzing your own container registry and editing the repository secrets used to access it.
+## File Structure
+
+| Path | Purpose |
+|------|---------|
+| `scripts/cfr_main_code.py` | Main reconstruction driver |
+| `scripts/lipd_to_pdb.py` | Converts LiPD `.lpd` files to cfr ProxyDatabase |
+| `scripts/convert_lipd_to_cfr_dataframe.py` | Converts legacy LiPD pickle to CFR DataFrame |
+| `scripts/combine_seeds.py` | Merges multi-seed reconstruction outputs into `combined_recon.nc` |
+| `lmr_configs.yml` | Reconstruction parameters (overwritten per run by PReSto) |
+| `query_params.json` | Data query filters (committed by PReSto to trigger the workflow) |
+| `Dockerfile` | Container definition for the cfr environment |
+| `environment.yml` | Conda environment specification |
+| `CITATION.cff` | Citation metadata |
+
+## Workflows
+
+### `cfr-custom.yml` — LMR CFR Reconstruction
+
+Two-job pipeline triggered by a push to `query_params.json` or manual dispatch:
+
+1. **prepare-data** — Acquires proxy data via one of three pathways:
+   - *Archived*: downloads a pre-built compilation pickle from LiPDverse
+   - *Filtered*: runs the `lipdGenerator` Docker container to query LiPDverse and package selected `.lpd` files, then converts them to a cfr ProxyDatabase
+   - *Traditional*: downloads a pre-generated pickle from a provided URL
+2. **reconstruct** — Runs the CFR reconstruction inside the `davidedge/lmr2` Docker container, combines seed runs, uploads results as artifacts, and commits them to the repository
+
+### `visualize.yml` — Visualization
+
+Triggered automatically after a successful `cfr-custom.yml` run (or manually). Calls the [presto-viz](https://github.com/DaveEdge1/presto-viz) reusable workflow to generate an interactive visualization and deploys it to GitHub Pages.
+
+## How to Use
+
+1. **Fork or clone** this repository
+2. Edit `lmr_configs.yml` to customize reconstruction parameters — see the [cfr LMR guide](https://fzhu2e.github.io/cfr/ug-lmr.html) for configuration options
+3. Push your changes; the workflow triggers automatically when `query_params.json` is updated, or run it manually from the **Actions** tab
+4. Reconstruction results are saved as artifacts (90-day retention) and committed to the `recons/` directory
+5. Visualizations are deployed to the repository's GitHub Pages site
