@@ -189,7 +189,12 @@ jobs:
       - name: Run CFR reconstruction
         run: |
           echo "Running LMR CFR reconstruction..."
+          # TQDM_MININTERVAL=30 throttles tqdm progress bars to one update
+          # every 30 seconds — GitHub Actions logs can't do \r overwriting,
+          # so each flush becomes a new line. Without this, a single KF loop
+          # prints thousands of lines.
           docker run --rm \
+            -e TQDM_MININTERVAL=30 \
             -v $(pwd)/scripts/cfr_main_code.py:/app/cfr_main_code.py:ro \
             -v $(pwd)/lmr_configs.yml:/app/user_config.yml:ro \
             -v $(pwd)/lipd_cfr.pkl:/app/lipd_cfr.pkl:ro \
