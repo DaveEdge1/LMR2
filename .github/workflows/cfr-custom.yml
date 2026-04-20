@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'query_params.json'   # not in template; server commits this LAST so all files are present
+      - 'lipd_cfr.pkl'        # pre-built cfr ProxyDatabase; commit to trigger reconstruction
   workflow_dispatch:
     inputs:
       unique_id:
@@ -35,13 +36,17 @@ jobs:
 
       # Detect which pathway to use.
       # Priority order:
+      #   0. lipd_cfr.pkl in repo       — pre-built cfr ProxyDatabase (skip all generation)
       #   1. query_params.json in repo  — server-committed (push trigger pathway)
       #   2. lipd_data_url input        — traditional pre-generated pickle
       #   3. lipd_query_json input      — manual workflow_dispatch
       - name: Detect data acquisition pathway
         id: pathway
         run: |
-          if [ -f "query_params.json" ]; then
+          if [ -f "lipd_cfr.pkl" ]; then
+            echo "pathway=prebuilt" >> $GITHUB_OUTPUT
+            echo "Using pre-built lipd_cfr.pkl from repo (skipping data generation)"
+          elif [ -f "query_params.json" ]; then
             echo "pathway=github_actions" >> $GITHUB_OUTPUT
             MODE=$(jq -r '.mode' query_params.json)
             echo "mode=$MODE" >> $GITHUB_OUTPUT
@@ -56,9 +61,16 @@ jobs:
             echo "mode=$MODE" >> $GITHUB_OUTPUT
             echo "Using lipd_query_json input (mode: $MODE)"
           else
-            echo "ERROR: No data source found (no query_params.json, no lipd_data_url, no lipd_query_json)"
+            echo "ERROR: No data source found (no lipd_cfr.pkl, no query_params.json, no lipd_data_url, no lipd_query_json)"
             exit 1
           fi
+
+      # PREBUILT PATHWAY: lipd_cfr.pkl already in repo — nothing to do
+      - name: Use pre-built proxy database
+        if: steps.pathway.outputs.pathway == 'prebuilt'
+        run: |
+          echo "Using pre-built lipd_cfr.pkl from repository"
+          ls -lh lipd_cfr.pkl
 
       # TRADITIONAL PATHWAY: Download from URL
       - name: Download LiPD data from URL
@@ -106,6 +118,7 @@ jobs:
           ls -lh lipd_output/lipd_files.zip
 
       - name: Verify LiPD data created
+        if: steps.pathway.outputs.pathway != 'prebuilt'
         run: |
           if [ -f lipd_data.pkl ] || [ -f lipd_output/lipd_files.zip ]; then
             echo "LiPD data ready"
@@ -116,6 +129,7 @@ jobs:
           fi
 
       - name: Pull Docker image
+        if: steps.pathway.outputs.pathway != 'prebuilt'
         run: docker pull davidedge/lmr2:latest
 
       # FILTERED PATHWAY: lipd_files.zip → cfr.ProxyDatabase (direct JSON parsing, no SPARQL)
@@ -133,7 +147,7 @@ jobs:
 
       # ARCHIVED / TRADITIONAL PATHWAY: legacy LiPD dict pickle → CFR DataFrame
       - name: Convert LiPD format (archived/traditional pathway)
-        if: steps.pathway.outputs.mode != 'filtered'
+        if: steps.pathway.outputs.pathway != 'prebuilt' && steps.pathway.outputs.mode != 'filtered'
         run: |
           echo "Converting LiPD pickle to CFR format using convert_lipd_to_cfr_dataframe.py ..."
           docker run --rm \
