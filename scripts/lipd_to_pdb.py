@@ -7,7 +7,15 @@ RDF graph (avoids writing custom SPARQL with fragile property paths), then
 maps the flat time-series dicts to cfr.ProxyRecord objects.
 
 Usage:
-    python lipd_to_pdb.py <lipd_files.zip> <output_lipd_cfr.pkl>
+    python lipd_to_pdb.py <lipd_files.zip> <output_lipd_cfr.pkl> [query_params.json]
+
+When query_params.json is supplied, only rows whose `paleoData_TSid` is in
+`tsids - removedTsids` are retained. pylipd stores the presto-catalog TSID
+under `paleoData_TSid` (capital T, lowercase id) — not `TSID` or
+`paleoData_TSID`. Without this positive filter, every sibling paleoData
+column in each .lpd leaks in (sampleCount, EPS, RBAR, segmentLength,
+correlationCoefficient, ARSTAN / residualChronology flavors of the same
+chronology), each getting its own PSM and Kalman update downstream.
 """
 
 import sys
@@ -266,17 +274,26 @@ def main():
     print(f"Input:  {zip_path}")
     print(f"Output: {output_path}")
 
-    # Load removedTsids from query_params.json if provided
+    # Load TSID filter from query_params.json if provided. When present,
+    # `requested_tsids` is the positive whitelist (tsids - removedTsids); rows
+    # whose `paleoData_TSid` is not in this set are rejected.
+    requested_tsids = None
     removed_tsids = set()
     if qp_path and os.path.isfile(qp_path):
         print(f"Query params: {qp_path}")
         with open(qp_path) as f:
             qp = json.load(f)
         removed_tsids = set(qp.get('removedTsids') or [])
-        if removed_tsids:
-            print(f"  Will remove {len(removed_tsids)} TSIDs from removedTsids list")
+        requested = set(qp.get('tsids') or [])
+        if requested:
+            requested_tsids = requested - removed_tsids
+            print(f"  TSID whitelist: {len(requested_tsids)} requested "
+                  f"({len(removed_tsids)} explicitly removed)")
+        elif removed_tsids:
+            print(f"  Will remove {len(removed_tsids)} TSIDs from removedTsids list "
+                  f"(no positive whitelist)")
     else:
-        print("Query params: not provided (removedTsids filter disabled)")
+        print("Query params: not provided (TSID filter disabled)")
 
     with tempfile.TemporaryDirectory() as tmpdir:
         print(f"\nUnzipping {zip_path} ...")
@@ -364,6 +381,8 @@ def main():
     SKIP_CONSTANT        = 'constant value (zero variance → EnKF blow-up)'
     SKIP_BAD_COORDS      = 'missing/invalid coordinates'
     SKIP_REMOVED_TSID    = 'user-removed TSID (removedTsids)'
+    SKIP_NOT_REQUESTED   = 'TSID not in query_params.tsids whitelist'
+    SKIP_NO_TSID         = 'row has no paleoData_TSid'
 
     skip_records = []              # per-record details for CSV
 
@@ -373,7 +392,7 @@ def main():
         arch = archive or str(row.get('archiveType') or row.get('archive') or 'unknown').lower().strip()
         skip_records.append({
             'dataSetName': str(row.get('dataSetName') or ''),
-            'TSID': str(row.get('TSID') or row.get('paleoData_TSID') or ''),
+            'TSID': str(row.get('paleoData_TSid') or ''),
             'variableName': str(row.get('paleoData_variableName') or ''),
             'archiveType': arch,
             'reason': reason,
@@ -383,9 +402,16 @@ def main():
         vname = str(row.get('paleoData_variableName') or '').strip()
         archive = str(row.get('archiveType') or row.get('archive') or '').lower().strip()
 
-        # Check removedTsids before doing expensive array work
-        tsid = str(row.get('TSID') or row.get('paleoData_TSID') or '')
-        if removed_tsids and tsid and tsid in removed_tsids:
+        # Apply TSID filter first (before expensive array work). pylipd exposes
+        # presto's TSID under `paleoData_TSid` — not `TSID` or `paleoData_TSID`.
+        tsid = row.get('paleoData_TSid')
+        if not tsid:
+            _skip(SKIP_NO_TSID, row, archive)
+            continue
+        if requested_tsids is not None and tsid not in requested_tsids:
+            _skip(SKIP_NOT_REQUESTED, row, archive)
+            continue
+        if removed_tsids and tsid in removed_tsids:
             _skip(SKIP_REMOVED_TSID, row, archive)
             continue
 
@@ -436,8 +462,9 @@ def main():
                        vname)
         ptype    = create_ptype(archive, std_name)
 
-        # Record ID
-        pid = str(tsid or row.get('dataSetName') or f'record_{n_ok}')
+        # Record ID — already validated as non-empty above; use it directly
+        # so the pid matches the presto TSID catalog exactly.
+        pid = str(tsid)
 
         df_rows.append({
             'paleoData_pages2kID':    pid,
