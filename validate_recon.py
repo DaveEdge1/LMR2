@@ -1108,32 +1108,72 @@ html = f"""<!DOCTYPE html>
   </div>
 
   <h2>GMST Validation Metrics ({VALID_START}&ndash;{VALID_END})</h2>
-  <p>Pearson correlation (<em>R</em>) and Nash&ndash;Sutcliffe
-     Coefficient of Efficiency (<em>CE</em>) of the ensemble-median
-     global mean surface temperature against instrumental datasets.
-     <em>CE</em> = 1 is a perfect reconstruction; <em>CE</em> = 0
-     matches the observed climatological mean; <em>CE</em> &lt; 0 is
-     worse than climatology.</p>
+  <p>Performance of the ensemble-median global mean surface temperature
+     (GMST) against instrumental datasets over the validation window.
+     Two metrics are reported for each reconstruction/reference pair.</p>
+  <p><strong>Pearson correlation</strong> (<em>R</em>): linear association
+     between the two time series. <em>R</em> measures pattern agreement
+     but is insensitive to systematic offsets or amplitude errors.</p>
+  <p><strong>Nash&ndash;Sutcliffe Coefficient of Efficiency</strong>
+     (<em>CE</em>; Nash &amp; Sutcliffe, 1970):
+     <br>&nbsp;&nbsp;<em>CE</em> = 1 &minus; &Sigma;(<em>y</em> &minus;
+     <em>&#374;</em>)<sup>2</sup> &nbsp;/&nbsp;
+     &Sigma;(<em>y</em> &minus; <em>&#562;</em>)<sup>2</sup>,
+     <br>where <em>y</em> is the observation, <em>&#374;</em> is the
+     reconstruction, and <em>&#562;</em> is the mean of the observations
+     over the validation window.
+     <em>CE</em> captures pattern, amplitude, and bias simultaneously:
+     <ul>
+       <li><em>CE</em> = 1 &mdash; perfect reconstruction; residual
+           variance is zero.</li>
+       <li><em>CE</em> = 0 &mdash; the reconstruction has the same
+           predictive skill as simply using the observed mean; its
+           residual variance equals the variance of the observations.</li>
+       <li><em>CE</em> &lt; 0 &mdash; the observed mean would be a better
+           predictor than the reconstruction.</li>
+     </ul>
+     <em>CE</em> is sensitive to outliers, so a single large miss can
+     dominate it.</p>
   <p><strong>Reference datasets</strong>:
      <span class="label-gistemp">GISTEMP</span> (NASA GISS surface
-     temperature analysis, ERSSTv4);
+     temperature analysis, ERSSTv4 ocean;
+     <a href="https://data.giss.nasa.gov/gistemp/">data.giss.nasa.gov</a>);
      <span class="label-hadcrut">HadCRUT5</span> (Met Office Hadley
-     Centre / CRU analysis);
-     <em>Consensus</em> &mdash; the simple arithmetic mean of the
-     available instrumental datasets (GISTEMP and HadCRUT5 when both
-     are loaded), taken over the years where all inputs have data.
-     This is not an authoritative product; it is an on-the-fly
-     summary to smooth between-dataset differences when evaluating
-     the reconstruction against instrumental observations.</p>
+     Centre / CRU analysis;
+     <a href="https://www.metoffice.gov.uk/hadobs/hadcrut5/">metoffice.gov.uk</a>);
+     <em>Consensus</em> &mdash; the arithmetic mean of the instrumental
+     datasets listed above, taken over the years where all inputs have
+     data. This is not an authoritative product; it is a local summary
+     used here to smooth between-dataset differences when evaluating
+     the reconstruction.</p>
   <table>
     <tr><th>Reconstruction</th><th>Reference</th><th>R</th><th>CE</th></tr>
 {table_rows}{lmr_direct_row}
   </table>
 
   <h2>Spatial Validation vs GISTEMP</h2>
-  <p>Grid-point correlation and coefficient of efficiency between the
+  <p>Grid-point <em>R</em> and <em>CE</em> between the
      <span class="label-custom">custom reconstruction</span> and
-     <span class="label-gistemp">GISTEMP</span> over {VALID_START}-{VALID_END}.</p>
+     <span class="label-gistemp">GISTEMP</span> over {VALID_START}&ndash;{VALID_END}.
+     Each cell's score is computed against its own 1951&ndash;1980
+     climatology (for anomalies) and its own time-series mean over the
+     validation window (for the <em>CE</em> denominator); the geographic
+     mean reported with each map is area-weighted.</p>
+  <p><strong>Why the geographic-mean <em>CE</em> is so much lower than
+     the GMST <em>CE</em></strong>. The two numbers measure different
+     things. At any single grid cell, most of the observed variance is
+     local &mdash; weather noise, regional modes (ENSO, NAO, AMO, PDO)
+     &mdash; which a paleoclimate reconstruction does not resolve. The
+     reconstruction primarily captures the large-scale, slowly varying
+     forced signal (volcanic, solar, anthropogenic), which is a small
+     fraction of local variance. So per-cell <em>CE</em> is typically
+     low or negative across much of the globe. When those cells are
+     averaged into the global mean, the local noise averages towards
+     zero and the forced signal dominates the residual variance, so the
+     global-mean <em>CE</em> ends up much higher. In other words, the
+     geographic mean of per-cell <em>CE</em> is <strong>not</strong> the
+     <em>CE</em> of the geographic-mean time series &mdash; these are
+     two different statistics and should not be expected to match.</p>
   <img src="spatial_corr_ce_combined.png" alt="Spatial correlation and CE maps">
 
   <details>
