@@ -490,32 +490,69 @@ def _temporal_plot(df_rows, group_key, title_suffix, out_path,
 
 
 def plot_spatial_maps(custom, presto2k, used_tsids, out_path):
-    fig, (ax_c, ax_p) = plt.subplots(1, 2, figsize=(18, 7),
-                                     subplot_kw={'projection': ccrs.Robinson()})
-    for ax, title, recs in [
-        (ax_c, f'Custom Run ({len(used_tsids)} records)',
-         [(t, custom[t]) for t in used_tsids if t in custom]),
-        (ax_p, f'PReSto2k ({len(presto2k)} records)',
-         list(presto2k.items())),
-    ]:
-        ax.set_global()
-        ax.coastlines(linewidth=0.5)
-        ax.add_feature(cfeature.BORDERS, linewidth=0.3, alpha=0.5)
+    """Side-by-side Robinson maps with one shared legend below, colored
+    by archive type. Legend order is a union across both panels so the
+    symbols line up regardless of which archives are present."""
+    # Collect union of archives across both panels so the legend lists
+    # every archive once, in a consistent order.
+    def _arc_points(recs):
         arc_pts = defaultdict(list)
         for _, r in recs:
             if np.isfinite(r['lat']) and np.isfinite(r['lon']):
                 arc_pts[r['archive']].append((r['lon'], r['lat']))
-        for arc, pts in sorted(arc_pts.items(),
-                               key=lambda kv: (-len(kv[1]), kv[0])):
+        return arc_pts
+
+    c_recs = [(t, custom[t]) for t in used_tsids if t in custom]
+    p_recs = list(presto2k.items())
+    arc_c = _arc_points(c_recs)
+    arc_p = _arc_points(p_recs)
+    all_archives = sorted(
+        set(arc_c) | set(arc_p),
+        key=lambda a: -max(len(arc_c.get(a, [])), len(arc_p.get(a, []))))
+
+    fig = plt.figure(figsize=(18, 8))
+    gs = fig.add_gridspec(2, 2, height_ratios=[20, 1], hspace=0.05)
+    ax_c = fig.add_subplot(gs[0, 0], projection=ccrs.Robinson())
+    ax_p = fig.add_subplot(gs[0, 1], projection=ccrs.Robinson())
+    legend_ax = fig.add_subplot(gs[1, :])
+    legend_ax.axis('off')
+
+    handles = []
+    for arc in all_archives:
+        color = ARCHIVE_COLORS.get(arc, '#999')
+        # Dummy handle for the shared legend
+        handles.append(plt.Line2D([0], [0], marker='o', linestyle='',
+                                   markerfacecolor=color,
+                                   markeredgecolor='black',
+                                   markeredgewidth=0.3,
+                                   markersize=7, label=arc))
+
+    for ax, title, arc_pts, recs in [
+        (ax_c, f'Custom Run ({len(c_recs)} records used in DA)',
+         arc_c, c_recs),
+        (ax_p, f'PReSto2k ({len(p_recs)} records)', arc_p, p_recs),
+    ]:
+        ax.set_global()
+        ax.coastlines(linewidth=0.5)
+        ax.add_feature(cfeature.BORDERS, linewidth=0.3, alpha=0.5)
+        for arc in all_archives:
+            pts = arc_pts.get(arc, [])
+            if not pts:
+                continue
             lons, lats = zip(*pts)
             ax.scatter(lons, lats, s=22, alpha=0.75,
                        color=ARCHIVE_COLORS.get(arc, '#999'),
                        edgecolor='black', linewidth=0.3,
-                       transform=ccrs.PlateCarree(),
-                       label=f'{arc} ({len(pts)})')
-        ax.legend(loc='lower left', fontsize=7, framealpha=0.9)
+                       transform=ccrs.PlateCarree())
         ax.set_title(title, fontsize=12)
-    fig.suptitle('Spatial distribution by archive type', fontsize=14)
+
+    legend_ax.legend(
+        handles=handles,
+        loc='center', ncol=min(len(all_archives), 8),
+        fontsize=9, frameon=False,
+        handletextpad=0.4, columnspacing=1.5)
+
+    fig.suptitle('Spatial distribution by archive type', fontsize=14, y=0.98)
     fig.savefig(out_path, dpi=140, bbox_inches='tight')
     plt.close(fig)
 

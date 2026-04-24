@@ -697,15 +697,16 @@ def _render_funnel(funnel):
     """Render the 5-stage funnel as metric chips."""
     stages = [
         ('Requested', funnel.get('requested'),
-         'TSIDs in query_params.json (tsids − removedTsids)'),
+         'TSIDs in query_params.json after removedTsids are excluded'),
         ('In pickle',  funnel.get('in_pickle'),
-         'Unique paleoData_TSid rows emitted by lipd_to_pdb.py'),
-        ('After ptype filter', funnel.get('after_ptype_filter'),
-         'After cfr.filter_proxydb'),
-        ('PSM calibrated', funnel.get('post_psm'),
-         'Records with a PSM fit, eligible for DA'),
+         'Unique paleoData_TSid rows written by lipd_to_pdb.py'),
+        ('After proxy-type filter', funnel.get('after_ptype_filter'),
+         'Records retained by cfr.filter_proxydb (archive / proxy-type whitelist)'),
+        ('PSM-calibrated', funnel.get('post_psm'),
+         'Records for which a proxy system model was fit against the '
+         'instrumental period; eligible for data assimilation.'),
         ('Assimilated', funnel.get('assimilated'),
-         'Records that updated the Kalman state'),
+         'Records used to update the Kalman state during reconstruction'),
     ]
     cards = []
     for label, val, tip in stages:
@@ -796,23 +797,25 @@ def _render_preview_list(items, csv_link=None, total=None):
 
 def _render_stats_table(stats, recon_period):
     c = stats['custom_used']; p = stats['presto2k']
-    rp = f'{recon_period[0]}–{recon_period[1]}' if recon_period else 'recon window'
+    rp = (f'{recon_period[0]}&ndash;{recon_period[1]} CE'
+          if recon_period else 'reconstruction window')
     rows_def = [
-        ('Records',                  'records', None),
-        ('Distinct archive types',   'distinct_archives',
-         'Custom counts only archives that passed the ptype filter '
-         f'({_fmt("[coral, tree, ice, lake, bivalve]")} per lmr_configs); '
-         'PReSto2k counts its full record set.'),
-        ('Distinct ptypes',          'distinct_ptypes',
+        ('Number of records',                    'records', None),
+        ('Distinct archive types',               'distinct_archives',
+         'Custom counts archives retained after the proxy-type filter '
+         '(filter_proxydb_kwargs in lmr_configs.yml); '
+         'PReSto2k reports the full published record set.'),
+        ('Distinct proxy types',                 'distinct_ptypes',
          'Same caveat as archive types.'),
-        ('Earliest record start',    'earliest_start',
-         f'Clipped to recon period {rp}.'),
-        ('Latest record end',        'latest_end',
-         f'Clipped to recon period {rp}.'),
-        ('Median record length (yr)', 'median_record_length',
-         f'Measured within recon period {rp}.'),
-        ('Median observations / record', 'median_n_obs',
-         f'Counts only observations within recon period {rp}.'),
+        ('Earliest record start (Year CE)',      'earliest_start',
+         f'Restricted to the reconstruction period {rp}. '
+         'Negative values indicate BCE.'),
+        ('Latest record end (Year CE)',          'latest_end',
+         f'Restricted to the reconstruction period {rp}.'),
+        ('Median record length (years)',         'median_record_length',
+         f'Measured within the reconstruction period {rp}.'),
+        ('Median observations per record',       'median_n_obs',
+         f'Observations within the reconstruction period {rp}.'),
     ]
     body = []
     for label, key, tip in rows_def:
@@ -821,7 +824,8 @@ def _render_stats_table(stats, recon_period):
         body.append(f'<tr><td>{label_html}</td>'
                     f'<td>{_fmt(c.get(key))}</td>'
                     f'<td>{_fmt(p.get(key))}</td></tr>')
-    return ('<table><tr><th>Statistic</th><th>Custom (used in DA)</th>'
+    return ('<table><tr><th>Statistic</th>'
+            '<th>Custom (assimilated + evaluation)</th>'
             '<th>PReSto2k</th></tr>' + ''.join(body) + '</table>')
 
 
@@ -863,11 +867,11 @@ if comparison_data:
   <div style="margin: 12px 0;">
     <label style="margin-right: 16px;">
       <input type="radio" name="tc" value="archive" checked>
-      By archive type
+      Colour by archive type
     </label>
     <label>
       <input type="radio" name="tc" value="ptype">
-      By ptype
+      Colour by proxy type
     </label>
   </div>
   <img id="tc-img" src="{tc_arc}"
@@ -898,7 +902,7 @@ if comparison_data:
   <details class="section">
     <summary style="font-size: 1.3rem; font-weight: 600; cursor: pointer;
                     color: #374151; padding: 8px 0;">
-      Proxy Database vs PReSto2k
+      Proxy Database Comparison vs PReSto2k
       <span style="font-weight: 400; color: #6b7280; font-size: 0.95rem;">
         (shared {c["counts"]["shared"]}, custom-only {c["counts"]["only_custom"]},
          PReSto2k-only {c["counts"]["only_presto2k"]})
@@ -906,55 +910,64 @@ if comparison_data:
     </summary>
 
     <div style="padding-top: 16px;">
-      <p>Comparison of the proxy set <strong>actually used</strong> in the
-         reconstruction (assimilated ∪ eval) against the reference
-         <strong>PReSto2k</strong> database, matched on
+      <p>Comparison of the proxy records used in this reconstruction
+         (those assimilated into the Kalman filter together with those
+         withheld for evaluation) against the published
+         <strong>PReSto2k</strong> reference database, matched on
          <code>paleoData_TSid</code>.</p>
 
-      <h3>Pipeline funnel</h3>
-      <p>Record attrition from presto's request through to the Kalman filter.</p>
+      <h3>Record-selection funnel</h3>
+      <p>Attrition of records from presto's initial TSID request through
+         pipeline filtering, PSM calibration, and final assimilation.</p>
       {funnel_html}
 
       <h3>Side-by-side statistics</h3>
       {stats_html}
 
-      <h3>Compilation breakdown</h3>
-      <p>Counts per compilation per lipdverse's
-         <code>paleoData_mostRecentCompilations</code> field, which tags
-         <em>one primary compilation per TSID</em>. A record belonging to
-         both <em>iso2k</em> and <em>CoralHydro2k</em> is counted only
-         under iso2k (lipdverse's chosen primary for most d18O corals), so
-         CoralHydro2k may appear 0 even when corals are present in the run.
-         TSIDs with no tag land in the <em>(none)</em> bucket.</p>
-      {f"<p><strong>Requested from:</strong> <code>{', '.join(requested_comps)}</code></p>" if requested_comps else ''}
+      <h3>Compilation membership</h3>
+      <p>Counts per compilation. Custom-run memberships are drawn from
+         each record's <code>paleoData_inCompilationBeta</code> metadata
+         (via <code>lipd_to_pdb.py</code>), which lists every compilation
+         and version a record belongs to — so a record in both
+         <em>iso2k</em> and <em>CoralHydro2k</em> is counted under both.
+         PReSto2k memberships, where the pickle does not carry
+         <code>inCompilationBeta</code>, fall back to lipdverse's single
+         <code>paleoData_mostRecentCompilations</code> tag, which records
+         only the primary compilation. Records without any tag appear in
+         the <em>(none)</em> bucket.</p>
+      {f"<p><strong>Compilations requested in query_params.json:</strong> <code>{', '.join(requested_comps)}</code></p>" if requested_comps else ''}
       {comp_html}
 
       <h3>Records by archive type</h3>
       {arch_html}
 
       <details>
-        <summary>ptype-level drill-down</summary>
+        <summary>Detailed breakdown by proxy type</summary>
         {ptype_html}
       </details>
 
       <h3>Temporal coverage</h3>
-      <p>Stacked bars per year, split by source (custom on top, PReSto2k
-         below). Toggle between coloring by archive or ptype.</p>
+      <p>Record counts by year, partitioned by source (custom run on top,
+         PReSto2k below). Switch between archive-type and proxy-type
+         (<code>ptype</code>) colouring.</p>
       {toggle_html}
 
       {f'<h3>Spatial distribution</h3><img src="{spat}" alt="Spatial maps">'
         if spat else ''}
 
-      <h3>What's only in PReSto2k <small>({c["counts"]["only_presto2k"]})</small></h3>
-      <p>PReSto2k records that aren't in the custom run (e.g., archive
-         filtered out by <code>filter_proxydb_kwargs</code>, or not requested).</p>
+      <h3>Records exclusive to PReSto2k <small>({c["counts"]["only_presto2k"]})</small></h3>
+      <p>Records present in the PReSto2k reference but absent from the
+         custom reconstruction (for example, archives excluded by
+         <code>filter_proxydb_kwargs</code>, or TSIDs not included in the
+         custom query).</p>
       {preview_p2k}
 
-      <h3>What's only in the custom run <small>({c["counts"]["only_custom"]})</small></h3>
-      <p>Custom records presto requested that aren't in PReSto2k.</p>
+      <h3>Records exclusive to the custom run <small>({c["counts"]["only_custom"]})</small></h3>
+      <p>Records requested in this reconstruction that do not appear in
+         the PReSto2k reference.</p>
       {preview_custom}
 
-      {'<h3>Records dropped by the pipeline</h3>' + dropped_html if dropped_html else ''}
+      {'<h3>Records discarded during processing</h3>' + dropped_html if dropped_html else ''}
     </div>
   </details>
 '''
@@ -1094,11 +1107,24 @@ html = f"""<!DOCTYPE html>
     </div>
   </div>
 
-  <h2>GMST Validation Metrics ({VALID_START}-{VALID_END})</h2>
-  <p>Correlation (R) and Coefficient of Efficiency (CE) of the
-     ensemble-median GMST against instrumental datasets.
-     CE = 1 is perfect; CE = 0 equals climatology; CE &lt; 0 is worse
-     than climatology.</p>
+  <h2>GMST Validation Metrics ({VALID_START}&ndash;{VALID_END})</h2>
+  <p>Pearson correlation (<em>R</em>) and Nash&ndash;Sutcliffe
+     Coefficient of Efficiency (<em>CE</em>) of the ensemble-median
+     global mean surface temperature against instrumental datasets.
+     <em>CE</em> = 1 is a perfect reconstruction; <em>CE</em> = 0
+     matches the observed climatological mean; <em>CE</em> &lt; 0 is
+     worse than climatology.</p>
+  <p><strong>Reference datasets</strong>:
+     <span class="label-gistemp">GISTEMP</span> (NASA GISS surface
+     temperature analysis, ERSSTv4);
+     <span class="label-hadcrut">HadCRUT5</span> (Met Office Hadley
+     Centre / CRU analysis);
+     <em>Consensus</em> &mdash; the simple arithmetic mean of the
+     available instrumental datasets (GISTEMP and HadCRUT5 when both
+     are loaded), taken over the years where all inputs have data.
+     This is not an authoritative product; it is an on-the-fly
+     summary to smooth between-dataset differences when evaluating
+     the reconstruction against instrumental observations.</p>
   <table>
     <tr><th>Reconstruction</th><th>Reference</th><th>R</th><th>CE</th></tr>
 {table_rows}{lmr_direct_row}

@@ -466,6 +466,33 @@ def main():
         # so the pid matches the presto TSID catalog exactly.
         pid = str(tsid)
 
+        # Multi-compilation membership from pylipd's
+        # paleoData_inCompilationBeta: a list of
+        #   [{'compilationName': 'iso2k', 'compilationVersion': ['1_1_2', ...]}]
+        # dicts. Expand to "<name>-<version>" strings so a record that's in
+        # both iso2k 1_1_2 and CoralHydro2k 1_0_0 gets tagged with both.
+        comp_beta = row.get('paleoData_inCompilationBeta')
+        compilations = []
+        if comp_beta:
+            try:
+                entries = (comp_beta if isinstance(comp_beta, list)
+                           else [comp_beta])
+                for entry in entries:
+                    if not isinstance(entry, dict):
+                        continue
+                    name = str(entry.get('compilationName') or '').strip()
+                    vers = entry.get('compilationVersion') or []
+                    if not isinstance(vers, (list, tuple)):
+                        vers = [vers]
+                    if name:
+                        if vers:
+                            for v in vers:
+                                compilations.append(f'{name}-{str(v).strip()}')
+                        else:
+                            compilations.append(name)
+            except Exception:
+                pass
+
         df_rows.append({
             'paleoData_pages2kID':    pid,
             'geo_meanLat':            lat,
@@ -476,6 +503,7 @@ def main():
             'ptype':                  ptype,
             'paleoData_variableName': vname,
             'paleoData_units':        str(row.get('paleoData_units') or 'unknown'),
+            'paleoData_compilations': compilations,
         })
         n_ok += 1
 
