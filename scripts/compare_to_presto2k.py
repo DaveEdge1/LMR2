@@ -180,8 +180,21 @@ def load_lipdverse(path):
 # Presto2k: load records and resolve pids -> TSIDs
 # ═══════════════════════════════════════════════════════════════════════════
 
-def load_presto2k(path, lv_meta, ds_tsids):
-    """Return dict tsid -> record-info (ptype, archive, lat/lon/time_*)."""
+def _time_stats(t_arr, clip_range):
+    """Return (start, end, n_obs) clipped to the DA window."""
+    if t_arr is None or t_arr.size == 0:
+        return None, None, 0
+    lo, hi = clip_range
+    t_clip = t_arr[(t_arr >= lo) & (t_arr <= hi)]
+    if t_clip.size == 0:
+        return None, None, 0
+    return int(np.floor(t_clip.min())), int(np.floor(t_clip.max())), int(t_clip.size)
+
+
+def load_presto2k(path, lv_meta, ds_tsids, clip_range):
+    """Return dict tsid -> record-info (ptype, archive, lat/lon/time_*).
+    Time stats are clipped to ``clip_range`` (recon_period) so pre-CE data
+    on a long record doesn't skew the earliest/latest stats."""
     print(f'Loading presto2k from {path} ...')
     with open(path, 'rb') as f:
         pdb = GenericUnpickler(f).load()
@@ -223,6 +236,7 @@ def load_presto2k(path, lv_meta, ds_tsids):
         t_arr = np.asarray(t_arr, dtype=float) if t_arr is not None else None
         if t_arr is not None:
             t_arr = t_arr[np.isfinite(t_arr)]
+        start, end, n_obs = _time_stats(t_arr, clip_range)
         ptype = str(g(rec, 'ptype', default='') or '')
         arc_from_ptype = normalize_archive(ptype.split('.')[0] if ptype else '')
         arc = (arc_from_ptype
@@ -234,11 +248,9 @@ def load_presto2k(path, lv_meta, ds_tsids):
             'archive': arc,
             'lat': float(g(rec, 'lat', default=np.nan)),
             'lon': float(g(rec, 'lon', default=np.nan)),
-            'time_start': (int(np.floor(t_arr.min()))
-                           if t_arr is not None and t_arr.size else None),
-            'time_end': (int(np.floor(t_arr.max()))
-                         if t_arr is not None and t_arr.size else None),
-            'n_obs': int(t_arr.size) if t_arr is not None else 0,
+            'time_start': start,
+            'time_end': end,
+            'n_obs': n_obs,
             'compilations': sorted(lv_meta.get(tsid, {}).get('compilations', set())),
         }
     if unresolved:
@@ -262,6 +274,8 @@ def _parse_pid_list(s):
 
 
 def load_custom(pickle_path, recon_path, lv_meta):
+    """Return (custom dict, pids_assim, pids_eval, recon_period tuple).
+    recon_period is read from the recon's time axis."""
     print(f'Loading custom pickle from {pickle_path} ...')
     df = pd.read_pickle(pickle_path)
     print(f'  {len(df)} rows  ({df["paleoData_pages2kID"].nunique()} unique pids)')
@@ -270,10 +284,14 @@ def load_custom(pickle_path, recon_path, lv_meta):
     ds = xr.open_dataset(recon_path)
     pids_assim = _parse_pid_list(ds.attrs.get('pids_assim', ''))
     pids_eval = _parse_pid_list(ds.attrs.get('pids_eval', ''))
+    # Derive recon_period from the netCDF time axis.
+    time_axis = np.asarray(ds['time'].values).astype(int)
+    recon_period = (int(time_axis.min()), int(time_axis.max()))
     ds.close()
     pids_used = pids_assim | pids_eval
     print(f'  pids_assim={len(pids_assim)}  pids_eval={len(pids_eval)}  '
           f'used={len(pids_used)}')
+    print(f'  recon_period: {recon_period}')
 
     out = {}
     for _, r in df.iterrows():
@@ -282,22 +300,31 @@ def load_custom(pickle_path, recon_path, lv_meta):
             continue  # duplicate (shouldn't happen with the patch, but be safe)
         t = np.asarray(r.get('year'), dtype=float)
         t = t[np.isfinite(t)]
+        start, end, n_obs = _time_stats(t, recon_period)
         ptype = str(r.get('ptype', ''))
         arc = normalize_archive(ptype.split('.')[0] if ptype else '')
+        # Prefer inCompilation info stored directly in the pickle if present
+        # (populated by a future lipd_to_pdb.py update); fall back to
+        # lipdverseQuery's mostRecent compilation.
+        col_comps = r.get('paleoData_compilations')
+        if col_comps and isinstance(col_comps, (list, tuple, set)):
+            comps = sorted(str(c) for c in col_comps if c)
+        else:
+            comps = sorted(lv_meta.get(pid, {}).get('compilations', set()))
         out[pid] = {
             'ptype': ptype,
             'archive': arc,
             'lat': float(r.get('geo_meanLat', np.nan)),
             'lon': float(r.get('geo_meanLon', np.nan)),
             'variableName': str(r.get('paleoData_variableName', '')),
-            'time_start': int(np.floor(t.min())) if t.size else None,
-            'time_end': int(np.floor(t.max())) if t.size else None,
-            'n_obs': int(t.size),
-            'compilations': sorted(lv_meta.get(pid, {}).get('compilations', set())),
+            'time_start': start,
+            'time_end': end,
+            'n_obs': n_obs,
+            'compilations': comps,
             'in_assim': pid in pids_assim,
             'in_eval': pid in pids_eval,
         }
-    return out, pids_assim, pids_eval
+    return out, pids_assim, pids_eval, recon_period
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -572,9 +599,10 @@ def main():
     lv_path = ensure_lipdverse_csv(args.lipdverse)
     lv_meta, ds_tsids = load_lipdverse(lv_path)
 
-    presto2k = load_presto2k(args.presto2k, lv_meta, ds_tsids)
-    custom, pids_assim, pids_eval = load_custom(
+    # Load custom first so we can use the recon_period as the clip window.
+    custom, pids_assim, pids_eval, recon_period = load_custom(
         args.custom_pickle, args.recon, lv_meta)
+    presto2k = load_presto2k(args.presto2k, lv_meta, ds_tsids, recon_period)
     pids_used = pids_assim | pids_eval
 
     # Funnel
@@ -585,7 +613,9 @@ def main():
         'post_psm': len(pids_used),
         'assimilated': len(pids_assim),
         'eval': len(pids_eval),
+        'recon_period': list(recon_period),
     }
+    requested_compilations = []
     if args.query_params and os.path.exists(args.query_params):
         with open(args.query_params) as f:
             qp = json.load(f)
@@ -593,6 +623,13 @@ def main():
         removed = set(qp.get('removedTsids') or [])
         funnel['requested'] = len(req - removed)
         funnel['removed_tsids'] = len(removed)
+        comp_raw = qp.get('compilation') or ''
+        if isinstance(comp_raw, str):
+            requested_compilations = [c.strip()
+                                       for c in comp_raw.split(',') if c.strip()]
+        elif isinstance(comp_raw, list):
+            requested_compilations = [str(c).strip()
+                                       for c in comp_raw if str(c).strip()]
 
     # ── Compilation table ──
     comp_rows = build_compilation_table(custom, presto2k, pids_used)
@@ -714,6 +751,7 @@ def main():
     # ── Comparison JSON ──
     comparison = {
         'funnel': funnel,
+        'requested_compilations': requested_compilations,
         'stats': stats,
         'compilation_rows': comp_rows,
         'archive_rows': archive_rows,

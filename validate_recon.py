@@ -794,20 +794,31 @@ def _render_preview_list(items, csv_link=None, total=None):
     return table + footer
 
 
-def _render_stats_table(stats):
+def _render_stats_table(stats, recon_period):
     c = stats['custom_used']; p = stats['presto2k']
+    rp = f'{recon_period[0]}–{recon_period[1]}' if recon_period else 'recon window'
     rows_def = [
-        ('Records',                 'records'),
-        ('Distinct archive types',  'distinct_archives'),
-        ('Distinct ptypes',         'distinct_ptypes'),
-        ('Earliest record start',   'earliest_start'),
-        ('Latest record end',       'latest_end'),
-        ('Median record length (yr)', 'median_record_length'),
-        ('Median observations per record', 'median_n_obs'),
+        ('Records',                  'records', None),
+        ('Distinct archive types',   'distinct_archives',
+         'Custom counts only archives that passed the ptype filter '
+         f'({_fmt("[coral, tree, ice, lake, bivalve]")} per lmr_configs); '
+         'PReSto2k counts its full record set.'),
+        ('Distinct ptypes',          'distinct_ptypes',
+         'Same caveat as archive types.'),
+        ('Earliest record start',    'earliest_start',
+         f'Clipped to recon period {rp}.'),
+        ('Latest record end',        'latest_end',
+         f'Clipped to recon period {rp}.'),
+        ('Median record length (yr)', 'median_record_length',
+         f'Measured within recon period {rp}.'),
+        ('Median observations / record', 'median_n_obs',
+         f'Counts only observations within recon period {rp}.'),
     ]
     body = []
-    for label, key in rows_def:
-        body.append(f'<tr><td>{label}</td>'
+    for label, key, tip in rows_def:
+        label_html = (f'<span title="{tip}" style="border-bottom: 1px dotted #999; '
+                      f'cursor: help;">{label}</span>' if tip else label)
+        body.append(f'<tr><td>{label_html}</td>'
                     f'<td>{_fmt(c.get(key))}</td>'
                     f'<td>{_fmt(p.get(key))}</td></tr>')
     return ('<table><tr><th>Statistic</th><th>Custom (used in DA)</th>'
@@ -835,10 +846,12 @@ if comparison_data:
 
     # Build sub-sections
     funnel_html = _render_funnel(c['funnel'])
-    stats_html = _render_stats_table(c['stats'])
+    recon_period = c['funnel'].get('recon_period')
+    stats_html = _render_stats_table(c['stats'], recon_period)
     comp_html = _render_compilation_table(c['compilation_rows'])
     arch_html = _render_archive_table(c['archive_rows'])
     ptype_html = _render_ptype_table(c['ptype_rows'])
+    requested_comps = c.get('requested_compilations') or []
 
     tc_arc = arts.get('temporal_coverage_archive')
     tc_pt  = arts.get('temporal_coverage_ptype')
@@ -906,10 +919,14 @@ if comparison_data:
       {stats_html}
 
       <h3>Compilation breakdown</h3>
-      <p>Counts per compilation (<code>paleoData_mostRecentCompilations</code>
-         from lipdverseQuery). Some TSIDs belong to multiple compilations —
-         only the primary/most-recent is tracked here, so a CoralHydro2k
-         coral that's also in iso2k is counted under <em>iso2k</em>.</p>
+      <p>Counts per compilation per lipdverse's
+         <code>paleoData_mostRecentCompilations</code> field, which tags
+         <em>one primary compilation per TSID</em>. A record belonging to
+         both <em>iso2k</em> and <em>CoralHydro2k</em> is counted only
+         under iso2k (lipdverse's chosen primary for most d18O corals), so
+         CoralHydro2k may appear 0 even when corals are present in the run.
+         TSIDs with no tag land in the <em>(none)</em> bucket.</p>
+      {f"<p><strong>Requested from:</strong> <code>{', '.join(requested_comps)}</code></p>" if requested_comps else ''}
       {comp_html}
 
       <h3>Records by archive type</h3>
