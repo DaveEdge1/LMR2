@@ -177,7 +177,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: lipd-cfr-data-${{ github.run_id }}
-          path: lipd_cfr.pkl
+          # skipped_records.csv + proxy_type_breakdown.csv feed the
+          # "Records dropped by the pipeline" section in the validation HTML.
+          path: |
+            lipd_cfr.pkl
+            prepare-data/skipped_records.csv
+            prepare-data/proxy_type_breakdown.csv
           retention-days: 7
 
   # ── Job 2: Run CFR reconstruction ─────────────────────────────────────────

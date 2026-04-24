@@ -34,6 +34,9 @@ LMR_V21_PATH = os.environ.get(
 VALID_START  = 1880
 VALID_END    = 2000
 ANOM_PERIOD  = [1951, 1980]
+COMPARISON_CSV  = os.environ.get('COMPARISON_CSV', '/app/proxy_db_comparison.csv')
+COMPARISON_JSON = os.environ.get('COMPARISON_JSON',
+                                  os.path.join(OUT_DIR, 'comparison.json'))
 
 os.makedirs(OUT_DIR, exist_ok=True)
 
@@ -122,6 +125,107 @@ def fetch_hadcrut5_gmst():
         except (ValueError, IndexError):
             continue
     return np.array(years), np.array(vals)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Proxy comparison functions
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Standard paleoclimate archive-type colors (keyed by normalized display name)
+ARCHIVE_COLORS = {
+    'Tree': '#228B22', 'Coral': '#FF6347', 'Ice': '#4169E1',
+    'Lake': '#8B4513', 'Marine': '#006400', 'Speleothem': '#9370DB',
+    'Borehole': '#FF8C00', 'Documents': '#808080', 'Bivalve': '#DEB887',
+    'Sclerosponge': '#20B2AA', 'Hybrid': '#C0C0C0', 'Other': '#999999',
+}
+
+
+def plot_temporal_coverage(rows, out_path):
+    """Stacked bar chart of proxy record temporal coverage by archive type."""
+    records = []
+    for r in rows:
+        try:
+            t0 = float(r['time_start'])
+            t1 = float(r['time_end'])
+            archive = r.get('archiveType', 'Other')
+            source = r.get('source', '')
+            records.append((t0, t1, archive, source))
+        except (ValueError, TypeError):
+            continue
+    if not records:
+        return False
+
+    # Determine range, clip outliers
+    starts = [r[0] for r in records]
+    ends = [r[1] for r in records]
+    lo = max(0, np.percentile(starts, 5))
+    hi = min(2100, np.percentile(ends, 95))
+    if hi <= lo:
+        lo, hi = min(starts), max(ends)
+
+    n_bins = 80
+    bin_edges = np.linspace(lo, hi, n_bins + 1)
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+    bin_width = bin_edges[1] - bin_edges[0]
+
+    archive_types = sorted(set(r[2] for r in records))
+
+    counts = {at: np.zeros(n_bins) for at in archive_types}
+    for t0, t1, archive, _ in records:
+        for i in range(n_bins):
+            if t0 <= bin_edges[i + 1] and t1 >= bin_edges[i]:
+                counts[archive][i] += 1
+
+    fig, ax = plt.subplots(figsize=(14, 5))
+    bottom = np.zeros(n_bins)
+    for at in archive_types:
+        color = ARCHIVE_COLORS.get(at, '#999999')
+        ax.bar(bin_centers, counts[at], width=bin_width * 0.95, bottom=bottom,
+               label=at, color=color, edgecolor='none')
+        bottom += counts[at]
+
+    ax.set_xlabel('Year CE')
+    ax.set_ylabel('Number of Records')
+    ax.set_title('Temporal Coverage of Proxy Records by Archive Type')
+    ax.legend(loc='upper left', fontsize=8, ncol=2)
+    ax.set_xlim(lo, hi)
+    fig.savefig(out_path, dpi=150, bbox_inches='tight')
+    plt.close(fig)
+    return True
+
+
+def build_comparison_table(rows):
+    """Build HTML table summarizing records by archive type and source."""
+    from collections import Counter
+    type_source = Counter()
+    for r in rows:
+        archive = r.get('archiveType', 'Other')
+        source = r.get('source', 'unknown')
+        type_source[(archive, source)] += 1
+
+    archives = sorted(set(a for a, _ in type_source.keys()))
+
+    html = '<table>\n'
+    html += '    <tr><th>Archive Type</th><th>Shared</th>'
+    html += '<th>PReSto2k Only</th><th>Custom Only</th><th>Total</th></tr>\n'
+
+    totals = {'both': 0, 'presto2k': 0, 'custom_run': 0}
+    for arch in archives:
+        b = type_source.get((arch, 'both'), 0)
+        p = type_source.get((arch, 'presto2k'), 0)
+        c = type_source.get((arch, 'custom_run'), 0)
+        totals['both'] += b
+        totals['presto2k'] += p
+        totals['custom_run'] += c
+        html += f'    <tr><td>{arch}</td><td>{b}</td><td>{p}</td>'
+        html += f'<td>{c}</td><td>{b + p + c}</td></tr>\n'
+
+    grand = sum(totals.values())
+    html += f'    <tr style="font-weight:bold"><td>Total</td>'
+    html += f'<td>{totals["both"]}</td><td>{totals["presto2k"]}</td>'
+    html += f'<td>{totals["custom_run"]}</td><td>{grand}</td></tr>\n'
+    html += '  </table>\n'
+    return html, totals
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -571,7 +675,288 @@ with open(os.path.join(OUT_DIR, 'validation_metrics.json'), 'w') as f:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# 10. Generate HTML report
+# 10. Load proxy-database comparison (comparison.json from compare_to_presto2k.py)
+# ═══════════════════════════════════════════════════════════════════════════
+comparison_html = ''
+comparison_data = None
+
+if os.path.exists(COMPARISON_JSON):
+    print(f'Loading proxy comparison from {COMPARISON_JSON} ...')
+    with open(COMPARISON_JSON) as f:
+        comparison_data = json.load(f)
+    print(f'  shared={comparison_data["counts"]["shared"]}  '
+          f'p2k-only={comparison_data["counts"]["only_presto2k"]}  '
+          f'custom-only={comparison_data["counts"]["only_custom"]}')
+
+
+def _fmt(v, dash='—'):
+    return dash if v is None or v == '' else str(v)
+
+
+def _render_funnel(funnel):
+    """Render the 5-stage funnel as metric chips."""
+    stages = [
+        ('Requested', funnel.get('requested'),
+         'TSIDs in query_params.json (tsids − removedTsids)'),
+        ('In pickle',  funnel.get('in_pickle'),
+         'Unique paleoData_TSid rows emitted by lipd_to_pdb.py'),
+        ('After ptype filter', funnel.get('after_ptype_filter'),
+         'After cfr.filter_proxydb'),
+        ('PSM calibrated', funnel.get('post_psm'),
+         'Records with a PSM fit, eligible for DA'),
+        ('Assimilated', funnel.get('assimilated'),
+         'Records that updated the Kalman state'),
+    ]
+    cards = []
+    for label, val, tip in stages:
+        if val is None:
+            continue
+        cards.append(f'''
+      <div class="metric-card" title="{tip}">
+        <div class="value">{val}</div>
+        <div class="label">{label}</div>
+      </div>''')
+    return '<div class="metric-grid">' + ''.join(cards) + '</div>'
+
+
+def _render_compilation_table(rows):
+    body = []
+    for r in rows:
+        c_csv = r.get('custom_csv')
+        p_csv = r.get('presto2k_csv')
+        c_link = (f'<a href="{c_csv}" download>⬇ CSV</a>' if c_csv else '—')
+        p_link = (f'<a href="{p_csv}" download>⬇ CSV</a>' if p_csv else '—')
+        body.append(
+            f'<tr><td>{r["compilation"]}</td>'
+            f'<td>{r["custom_count"]}</td><td>{c_link}</td>'
+            f'<td>{r["presto2k_count"]}</td><td>{p_link}</td>'
+            f'<td>{r["shared"]}</td><td>{r["custom_only"]}</td>'
+            f'<td>{r["p2k_only"]}</td></tr>')
+    return (
+        '<table><tr>'
+        '<th>Compilation</th>'
+        '<th>Custom</th><th>CSV</th>'
+        '<th>PReSto2k</th><th>CSV</th>'
+        '<th>Shared</th><th>Custom-only</th><th>PReSto2k-only</th>'
+        '</tr>' + ''.join(body) + '</table>'
+    )
+
+
+def _render_archive_table(rows):
+    body = []
+    ts = {'shared': 0, 'p2k_only': 0, 'custom_only': 0}
+    for r in rows:
+        ts['shared'] += r['shared']; ts['p2k_only'] += r['p2k_only']
+        ts['custom_only'] += r['custom_only']
+        body.append(
+            f'<tr><td>{r["archive"]}</td><td>{r["shared"]}</td>'
+            f'<td>{r["p2k_only"]}</td><td>{r["custom_only"]}</td>'
+            f'<td>{r["shared"] + r["p2k_only"] + r["custom_only"]}</td></tr>')
+    body.append(
+        f'<tr style="font-weight:bold"><td>Total</td><td>{ts["shared"]}</td>'
+        f'<td>{ts["p2k_only"]}</td><td>{ts["custom_only"]}</td>'
+        f'<td>{sum(ts.values())}</td></tr>')
+    return ('<table><tr><th>Archive</th><th>Shared</th>'
+            '<th>PReSto2k only</th><th>Custom only</th><th>Total</th></tr>'
+            + ''.join(body) + '</table>')
+
+
+def _render_ptype_table(rows):
+    body = []
+    for r in rows:
+        body.append(
+            f'<tr><td>{r["ptype"]}</td><td>{r["shared"]}</td>'
+            f'<td>{r["p2k_only"]}</td><td>{r["custom_only"]}</td></tr>')
+    return ('<table><tr><th>ptype</th><th>Shared</th>'
+            '<th>PReSto2k only</th><th>Custom only</th></tr>'
+            + ''.join(body) + '</table>')
+
+
+def _render_preview_list(items, csv_link=None, total=None):
+    if not items:
+        return '<p><em>None.</em></p>'
+    body = []
+    for r in items:
+        rng = f'{_fmt(r.get("time_start"))}–{_fmt(r.get("time_end"))}'
+        body.append(
+            f'<tr><td><code>{r["tsid"]}</code></td>'
+            f'<td>{r.get("archive", "")}</td>'
+            f'<td>{r.get("ptype", "")}</td>'
+            f'<td>{r.get("dataSetName", "")}</td>'
+            f'<td>{rng}</td><td>{r.get("n_obs", 0)}</td></tr>')
+    table = ('<table><tr><th>TSID</th><th>Archive</th><th>ptype</th>'
+             '<th>Dataset</th><th>Years</th><th>n_obs</th></tr>'
+             + ''.join(body) + '</table>')
+    footer = ''
+    if csv_link and total and total > len(items):
+        footer = (f'<p><a href="{csv_link}" download>'
+                  f'⬇ Download full CSV ({total} rows)</a></p>')
+    return table + footer
+
+
+def _render_stats_table(stats):
+    c = stats['custom_used']; p = stats['presto2k']
+    rows_def = [
+        ('Records',                 'records'),
+        ('Distinct archive types',  'distinct_archives'),
+        ('Distinct ptypes',         'distinct_ptypes'),
+        ('Earliest record start',   'earliest_start'),
+        ('Latest record end',       'latest_end'),
+        ('Median record length (yr)', 'median_record_length'),
+        ('Median observations per record', 'median_n_obs'),
+    ]
+    body = []
+    for label, key in rows_def:
+        body.append(f'<tr><td>{label}</td>'
+                    f'<td>{_fmt(c.get(key))}</td>'
+                    f'<td>{_fmt(p.get(key))}</td></tr>')
+    return ('<table><tr><th>Statistic</th><th>Custom (used in DA)</th>'
+            '<th>PReSto2k</th></tr>' + ''.join(body) + '</table>')
+
+
+def _render_dropped_reasons(reasons, csv_link=None):
+    if not reasons:
+        return ''
+    body = []
+    for reason, n in sorted(reasons.items(), key=lambda kv: -kv[1]):
+        body.append(f'<tr><td>{reason}</td><td>{n}</td></tr>')
+    out = ('<table><tr><th>Reason</th><th>Records</th></tr>'
+           + ''.join(body) + '</table>')
+    if csv_link:
+        out += (f'<p><a href="{csv_link}" download>'
+                '⬇ Download full list</a></p>')
+    return out
+
+
+if comparison_data:
+    c = comparison_data
+    arts = c.get('artifacts', {})
+    dls = arts.get('downloads', {})
+
+    # Build sub-sections
+    funnel_html = _render_funnel(c['funnel'])
+    stats_html = _render_stats_table(c['stats'])
+    comp_html = _render_compilation_table(c['compilation_rows'])
+    arch_html = _render_archive_table(c['archive_rows'])
+    ptype_html = _render_ptype_table(c['ptype_rows'])
+
+    tc_arc = arts.get('temporal_coverage_archive')
+    tc_pt  = arts.get('temporal_coverage_ptype')
+    spat   = arts.get('spatial_map')
+
+    toggle_html = ''
+    if tc_arc and tc_pt:
+        toggle_html = f'''
+  <div style="margin: 12px 0;">
+    <label style="margin-right: 16px;">
+      <input type="radio" name="tc" value="archive" checked>
+      By archive type
+    </label>
+    <label>
+      <input type="radio" name="tc" value="ptype">
+      By ptype
+    </label>
+  </div>
+  <img id="tc-img" src="{tc_arc}"
+       alt="Temporal coverage by archive type">
+  <script>
+    document.querySelectorAll('input[name=tc]').forEach(r =>
+      r.addEventListener('change', e =>
+        document.getElementById('tc-img').src =
+          'temporal_coverage_' + e.target.value + '.png'));
+  </script>'''
+    elif tc_arc:
+        toggle_html = f'<img src="{tc_arc}" alt="Temporal coverage">'
+
+    preview_p2k = _render_preview_list(
+        c.get('only_presto2k_preview', []),
+        csv_link=dls.get('only_presto2k'),
+        total=c['counts']['only_presto2k'])
+    preview_custom = _render_preview_list(
+        c.get('only_custom_preview', []),
+        csv_link=dls.get('only_custom'),
+        total=c['counts']['only_custom'])
+
+    dropped_html = _render_dropped_reasons(
+        c.get('dropped_reasons', {}),
+        csv_link=dls.get('dropped_records'))
+
+    comparison_html = f'''
+  <details class="section">
+    <summary style="font-size: 1.3rem; font-weight: 600; cursor: pointer;
+                    color: #374151; padding: 8px 0;">
+      Proxy Database vs PReSto2k
+      <span style="font-weight: 400; color: #6b7280; font-size: 0.95rem;">
+        (shared {c["counts"]["shared"]}, custom-only {c["counts"]["only_custom"]},
+         PReSto2k-only {c["counts"]["only_presto2k"]})
+      </span>
+    </summary>
+
+    <div style="padding-top: 16px;">
+      <p>Comparison of the proxy set <strong>actually used</strong> in the
+         reconstruction (assimilated ∪ eval) against the reference
+         <strong>PReSto2k</strong> database, matched on
+         <code>paleoData_TSid</code>.</p>
+
+      <h3>Pipeline funnel</h3>
+      <p>Record attrition from presto's request through to the Kalman filter.</p>
+      {funnel_html}
+
+      <h3>Side-by-side statistics</h3>
+      {stats_html}
+
+      <h3>Compilation breakdown</h3>
+      <p>Counts per compilation (<code>paleoData_mostRecentCompilations</code>
+         from lipdverseQuery). Some TSIDs belong to multiple compilations —
+         only the primary/most-recent is tracked here, so a CoralHydro2k
+         coral that's also in iso2k is counted under <em>iso2k</em>.</p>
+      {comp_html}
+
+      <h3>Records by archive type</h3>
+      {arch_html}
+
+      <details>
+        <summary>ptype-level drill-down</summary>
+        {ptype_html}
+      </details>
+
+      <h3>Temporal coverage</h3>
+      <p>Stacked bars per year, split by source (custom on top, PReSto2k
+         below). Toggle between coloring by archive or ptype.</p>
+      {toggle_html}
+
+      {f'<h3>Spatial distribution</h3><img src="{spat}" alt="Spatial maps">'
+        if spat else ''}
+
+      <h3>What's only in PReSto2k <small>({c["counts"]["only_presto2k"]})</small></h3>
+      <p>PReSto2k records that aren't in the custom run (e.g., archive
+         filtered out by <code>filter_proxydb_kwargs</code>, or not requested).</p>
+      {preview_p2k}
+
+      <h3>What's only in the custom run <small>({c["counts"]["only_custom"]})</small></h3>
+      <p>Custom records presto requested that aren't in PReSto2k.</p>
+      {preview_custom}
+
+      {'<h3>Records dropped by the pipeline</h3>' + dropped_html if dropped_html else ''}
+    </div>
+  </details>
+'''
+    print('  Comparison HTML section built (comparison.json)')
+
+elif os.path.exists(COMPARISON_CSV):
+    print(f'Legacy comparison CSV found at {COMPARISON_CSV} — '
+          f'comparison.json preferred; rendering minimal block.')
+    with open(COMPARISON_CSV, encoding='utf-8') as f:
+        rows = list(csv.DictReader(f))
+    archive_table_html, tot = build_comparison_table(rows)
+    comparison_html = (
+        f'<h2>Proxy Database Comparison (legacy)</h2>{archive_table_html}')
+else:
+    print('No proxy comparison data found — skipping comparison section')
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 11. Generate HTML report
 # ═══════════════════════════════════════════════════════════════════════════
 print('Generating HTML report ...')
 
@@ -740,6 +1125,8 @@ html = f"""<!DOCTYPE html>
   {'<p>Year-by-year difference between the custom reconstruction and LMRv2.1 ensemble medians. Red = warmer, Blue = cooler.</p>' if has_diff_plot else ''}
   {'<img src="gmst_difference.png" alt="GMST difference plot">' if has_diff_plot else ''}
 
+  {comparison_html}
+
   <p class="back"><a href="../index.html">&larr; Back to results</a></p>
 </body>
 </html>"""
@@ -752,5 +1139,10 @@ print(f'  Plots: spatial_corr_map.png, spatial_ce_map.png, '
       f'spatial_corr_ce_combined.png')
 print(f'  Plots: gmst_timeseries.png, gmst_instrumental_detail.png'
       f'{", gmst_difference.png" if has_diff_plot else ""}')
+if comparison_data:
+    print(f'  Comparison: temporal_coverage_archive.png, '
+          f'temporal_coverage_ptype.png, spatial_map_comparison.png')
+    print(f'              downloads/used_vs_presto2k.csv + '
+          f'compilation CSVs')
 print(f'  Data:  validation_metrics.csv, validation_metrics.json')
 print(f'  HTML:  index.html')

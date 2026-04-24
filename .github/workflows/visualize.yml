@@ -124,24 +124,86 @@ jobs:
           name: cfr-data-for-viz-${{ github.run_number }}
           path: ./cfr-data
 
+      - name: Download proxy comparison data
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: lipd-cfr-data-${{ needs.find-latest-cfr-run.outputs.run_id }}
+          path: ./prepare-data
+          run-id: ${{ needs.find-latest-cfr-run.outputs.run_id }}
+          github-token: ${{ github.token }}
+
       - name: Verify reconstruction data
         run: |
           echo "Available NetCDF files:"
           ls -lh ./cfr-data/*.nc
+          echo ""
+          echo "Proxy comparison data:"
+          ls -lh ./prepare-data/proxy_db_comparison.csv 2>/dev/null || echo "  (not available)"
 
       - name: Pull Docker image
         run: docker pull davidedge/lmr2:latest
 
+      # Proxy-database comparison vs PReSto2k. Produces comparison.json +
+      # temporal-coverage PNGs + spatial map + per-compilation CSVs under
+      # /validation, which validate_recon.py then consumes for the
+      # collapsible "Proxy Database vs PReSto2k" section. The custom
+      # pickle lands in ./prepare-data/ (from the lipd-cfr-data artifact).
+      - name: Generate proxy comparison vs PReSto2k
+        continue-on-error: true
+        run: |
+          if [ ! -f ./prepare-data/lipd_cfr.pkl ]; then
+            echo "lipd_cfr.pkl not present — skipping comparison"
+            exit 0
+          fi
+          if [ ! -f ./proxy_data/presto2k_pdb.pkl ]; then
+            echo "presto2k_pdb.pkl not present in repo — skipping comparison"
+            exit 0
+          fi
+          SKIPPED_MOUNT=""; SKIPPED_ARG=""
+          if [ -f "./prepare-data/skipped_records.csv" ]; then
+            SKIPPED_MOUNT="-v $(pwd)/prepare-data/skipped_records.csv:/app/prepare-data/skipped_records.csv:ro"
+            SKIPPED_ARG="--skipped /app/prepare-data/skipped_records.csv"
+          fi
+          QP_MOUNT=""; QP_ARG=""
+          if [ -f "./query_params.json" ]; then
+            QP_MOUNT="-v $(pwd)/query_params.json:/app/query_params.json:ro"
+            QP_ARG="--query-params /app/query_params.json"
+          fi
+          mkdir -p ./validation
+          docker run --rm \
+            -v $(pwd)/scripts/compare_to_presto2k.py:/app/compare_to_presto2k.py:ro \
+            -v $(pwd)/prepare-data/lipd_cfr.pkl:/app/lipd_cfr.pkl:ro \
+            -v $(pwd)/proxy_data/presto2k_pdb.pkl:/app/presto2k_pdb.pkl:ro \
+            -v $(pwd)/cfr-data:/recons:ro \
+            -v $(pwd)/validation:/validation \
+            ${SKIPPED_MOUNT} ${QP_MOUNT} \
+            -w /app \
+            davidedge/lmr2:latest \
+            conda run -n cfr-env python compare_to_presto2k.py \
+              --custom-pickle /app/lipd_cfr.pkl \
+              --presto2k      /app/presto2k_pdb.pkl \
+              --recon         /recons/job_r01_recon.nc \
+              ${QP_ARG} ${SKIPPED_ARG} \
+              --out-dir       /validation
+
       - name: Run validation script
         run: |
+          COMPARISON_MOUNT=""
+          if [ -f "./prepare-data/proxy_db_comparison.csv" ]; then
+            COMPARISON_MOUNT="-v $(pwd)/prepare-data/proxy_db_comparison.csv:/app/proxy_db_comparison.csv:ro"
+          fi
           docker run --rm \
             -v $(pwd)/validate_recon.py:/app/validate_recon.py:ro \
             -v $(pwd)/cfr-data:/recons:ro \
             -v $(pwd)/reference_data:/reference_data:ro \
             -v $(pwd)/validation:/validation \
+            ${COMPARISON_MOUNT} \
             -e RECON_DIR=/recons \
             -e VALIDATION_DIR=/validation \
             -e LMR_V21_PATH=/reference_data/gmt_MCruns_ensemble_full_LMRv2.1.nc \
+            -e COMPARISON_CSV=/app/proxy_db_comparison.csv \
+            -e COMPARISON_JSON=/validation/comparison.json \
             davidedge/lmr2:latest \
             conda run -n cfr-env python /app/validate_recon.py
 
