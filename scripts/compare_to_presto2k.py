@@ -26,6 +26,7 @@ import csv
 import json
 import os
 import pickle
+import re
 import sys
 import tempfile
 import urllib.request
@@ -363,25 +364,51 @@ def build_stats(custom, presto2k, used_tsids):
     }
 
 
+_VERSION_SUFFIX_RE = re.compile(r'-\d[0-9_]*$')
+
+
+def _compilation_name(full):
+    """Strip a trailing ``-<version>`` suffix so `Pages2kTemperature-2_2_0`
+    and `Pages2kTemperature-2_1_4` collapse to ``Pages2kTemperature``.
+    Records typically carry every historic version of a compilation in
+    ``paleoData_inCompilationBeta``; without this collapse they would
+    double-count across versions."""
+    return _VERSION_SUFFIX_RE.sub('', str(full))
+
+
 def build_compilation_table(custom, presto2k, used_tsids):
-    """Per-compilation side-by-side."""
+    """Per-compilation side-by-side, aggregated by compilation name
+    (versions collapsed). Each record is counted once per compilation it
+    appears in."""
     custom_comps = defaultdict(set)
+    custom_versions = defaultdict(set)
     for t in used_tsids:
         info = custom.get(t, {})
-        for c in info.get('compilations') or ['(none)']:
-            custom_comps[c].add(t)
+        raw = info.get('compilations') or ['(none)']
+        for c in raw:
+            name = _compilation_name(c)
+            custom_comps[name].add(t)
+            custom_versions[name].add(c)
+
     p2k_comps = defaultdict(set)
+    p2k_versions = defaultdict(set)
     for t, info in presto2k.items():
-        for c in info.get('compilations') or ['(none)']:
-            p2k_comps[c].add(t)
+        raw = info.get('compilations') or ['(none)']
+        for c in raw:
+            name = _compilation_name(c)
+            p2k_comps[name].add(t)
+            p2k_versions[name].add(c)
 
     all_comps = sorted(set(custom_comps) | set(p2k_comps))
     rows = []
     for c in all_comps:
         cu = custom_comps.get(c, set())
         pr = p2k_comps.get(c, set())
+        versions = sorted(custom_versions.get(c, set()) |
+                          p2k_versions.get(c, set()))
         rows.append({
             'compilation': c,
+            'versions': versions,
             'custom_count': len(cu),
             'presto2k_count': len(pr),
             'shared': len(cu & pr),

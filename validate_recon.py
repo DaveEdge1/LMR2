@@ -727,8 +727,15 @@ def _render_compilation_table(rows):
         p_csv = r.get('presto2k_csv')
         c_link = (f'<a href="{c_csv}" download>⬇ CSV</a>' if c_csv else '—')
         p_link = (f'<a href="{p_csv}" download>⬇ CSV</a>' if p_csv else '—')
+        versions = r.get('versions') or []
+        if versions:
+            tip = 'Versions represented: ' + ', '.join(versions)
+            name_cell = (f'<span title="{tip}" style="border-bottom: 1px dotted #999; '
+                         f'cursor: help;">{r["compilation"]}</span>')
+        else:
+            name_cell = r['compilation']
         body.append(
-            f'<tr><td>{r["compilation"]}</td>'
+            f'<tr><td>{name_cell}</td>'
             f'<td>{r["custom_count"]}</td><td>{c_link}</td>'
             f'<td>{r["presto2k_count"]}</td><td>{p_link}</td>'
             f'<td>{r["shared"]}</td><td>{r["custom_only"]}</td>'
@@ -925,16 +932,31 @@ if comparison_data:
       {stats_html}
 
       <h3>Compilation membership</h3>
-      <p>Counts per compilation. Custom-run memberships are drawn from
-         each record's <code>paleoData_inCompilationBeta</code> metadata
-         (via <code>lipd_to_pdb.py</code>), which lists every compilation
-         and version a record belongs to — so a record in both
-         <em>iso2k</em> and <em>CoralHydro2k</em> is counted under both.
-         PReSto2k memberships, where the pickle does not carry
-         <code>inCompilationBeta</code>, fall back to lipdverse's single
-         <code>paleoData_mostRecentCompilations</code> tag, which records
-         only the primary compilation. Records without any tag appear in
-         the <em>(none)</em> bucket.</p>
+      <p>Records counted by compilation, aggregated across all versions
+         (hover the compilation name to see the versions present).
+         A record is counted under every compilation its LiPD metadata
+         claims membership of, so a record listed in both
+         <em>iso2k</em> and <em>CoralHydro2k</em> is counted in both
+         rows.</p>
+      <p><strong>Source of membership data.</strong> Custom-run
+         memberships come from each record's
+         <code>paleoData_inCompilationBeta</code> field, extracted in
+         <code>lipd_to_pdb.py</code>. PReSto2k records do not carry that
+         field in <code>presto2k_pdb.pkl</code>; their memberships fall
+         back to lipdverse's single
+         <code>paleoData_mostRecentCompilations</code> tag (one
+         compilation per record), so the PReSto2k counts are a lower
+         bound. Records with no membership land in the <em>(none)</em>
+         bucket.</p>
+      <p><strong>A zero count is not a bug.</strong> Each compilation
+         curates its own set of paleoclimate records, often with
+         different <code>paleoData_TSid</code> namespaces. If presto's
+         <code>tsids</code> request happens not to intersect a given
+         compilation's records (e.g. the user requests iso2k corals,
+         which are physically distinct samples from CoralHydro2k's
+         corals), that compilation will show 0 even though the request
+         listed it under <code>compilation</code> in
+         <code>query_params.json</code>.</p>
       {f"<p><strong>Compilations requested in query_params.json:</strong> <code>{', '.join(requested_comps)}</code></p>" if requested_comps else ''}
       {comp_html}
 
