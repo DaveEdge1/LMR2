@@ -14,6 +14,29 @@ name: Update README
 #   release-recon.yml   : bundles each successful run into a GitHub Release
 #   update-readme.yml   : (this file) keeps README.md in sync with inputs
 #
+# ── Release objects (release-recon.yml) ───────────────────────────────
+# Every successful cfr-custom + visualize cycle is bundled into a tagged
+# GitHub Release named `recon-<cfr_run_id>` that preserves the
+# scientific record indefinitely (Actions artifacts have at most 90-day
+# retention). Each release attaches:
+#
+#   combined_recon.nc, job_r01_recon.nc  reconstruction NetCDFs (KF ensemble)
+#   lipd_cfr.pkl                         proxy database that was assimilated
+#   skipped_records.csv,                 records dropped by the prepare-data
+#     proxy_type_breakdown.csv             pipeline (PSM calibration etc.)
+#   validation.tar.gz                    validation HTML + GMST/spatial plots
+#                                          + comparison.json + per-compilation
+#                                          CSVs (proxy-database vs PReSto2k)
+#   query_params.json, lmr_configs.yml,  inputs and run-context snapshot
+#     cleaning_report.json, README.md
+#
+# release-recon.yml is idempotent: a recon-<run_id> release is created
+# at most once. If a release was created before the lipd-cfr-data
+# retention bump (7→90 days) and is missing lipd_cfr.pkl, refresh it
+# with:
+#   gh workflow run cfr-custom.yml --ref main -f prepare_only=true
+# then `gh release upload recon-<run_id> lipd_cfr.pkl ...`.
+#
 # ── GitHub-Zenodo integration (optional) ──────────────────────────────
 # Releases produced by release-recon.yml can be auto-archived to Zenodo
 # with citable DOIs. To enable on a custom recon repo:
