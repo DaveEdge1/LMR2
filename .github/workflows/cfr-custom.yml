@@ -9,7 +9,7 @@ on:
     inputs:
       unique_id:
         description: 'Unique reconstruction ID'
-        required: true
+        required: false
         type: string
       lipd_data_url:
         description: 'URL to pre-generated LiPD pickle (traditional pathway)'
@@ -19,6 +19,11 @@ on:
         description: 'LiPD data query parameters for workflow generation (dispatch pathway)'
         required: false
         type: string
+      prepare_only:
+        description: 'Run only data prep (skip reconstruct). Use to refresh lipd_cfr.pkl for an existing release without redoing the full Kalman filter run.'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   # ── Job 1: Acquire and convert proxy data ─────────────────────────────────
@@ -191,8 +196,13 @@ jobs:
   # ── Job 2: Run CFR reconstruction ─────────────────────────────────────────
   # Re-run this job alone (via "Re-run failed jobs") when only CFR config
   # changes are needed — no need to redo the 20-min data generation.
+  # Skipped entirely when workflow_dispatch input prepare_only=true, which
+  # is used to refresh the lipd-cfr-data artifact (e.g., to backfill
+  # lipd_cfr.pkl into an existing release) without spending hours on a
+  # fresh Kalman filter run.
   reconstruct:
     needs: prepare-data
+    if: inputs.prepare_only != true
     runs-on: ubuntu-latest
     timeout-minutes: 240
     permissions:

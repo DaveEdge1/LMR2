@@ -7,6 +7,27 @@ name: Update README
 # Triggers on a successful "LMR CFR Reconstruction" workflow run, or on
 # manual dispatch (useful after editing lmr_configs.yml without re-running
 # the full reconstruction).
+#
+# ── Workflow ecosystem ────────────────────────────────────────────────
+#   cfr-custom.yml      : runs the reconstruction (prepare-data + reconstruct)
+#   visualize.yml       : builds the visualizer + validation page
+#   release-recon.yml   : bundles each successful run into a GitHub Release
+#   update-readme.yml   : (this file) keeps README.md in sync with inputs
+#
+# ── GitHub-Zenodo integration (optional) ──────────────────────────────
+# Releases produced by release-recon.yml can be auto-archived to Zenodo
+# with citable DOIs. To enable on a custom recon repo:
+#   1. Sign in at https://zenodo.org/account/settings/github/ with the
+#      repo owner's GitHub account.
+#   2. Toggle the switch next to this repository to "On". Zenodo
+#      installs a webhook that fires on every release.
+#   3. Cut a release (or trigger release-recon.yml). Zenodo mints a
+#      version DOI for the release and a stable concept DOI for the
+#      repo as a whole.
+#   4. Optionally add a DOI badge to README_NOTES.md so it appears at
+#      the top of the auto-generated README:
+#        [![DOI](https://zenodo.org/badge/DOI/<concept_doi>.svg)](https://doi.org/<concept_doi>)
+# This is a one-time per-repo setup; no workflow changes are required.
 
 on:
   workflow_run:
