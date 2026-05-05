@@ -187,6 +187,49 @@ jobs:
               ${QP_ARG} ${SKIPPED_ARG} \
               --out-dir       /validation
 
+      # When the upstream lipd-cfr-data artifact has expired beyond its
+      # retention window, the comparison-generation step above silently
+      # no-ops and this run produces no comparison.json. Recover the
+      # comparison data (comparison.json + PNGs + per-compilation CSVs)
+      # from the most recent validation-output artifact that has it, so
+      # validate_recon.py can render the "Proxy Database vs PReSto2k"
+      # section.
+      - name: Recover comparison data from latest prior validation artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p ./validation
+          if [ -f ./validation/comparison.json ]; then
+            echo "comparison.json present from this run — no recovery needed"
+            exit 0
+          fi
+          echo "comparison.json missing — searching prior validation artifacts ..."
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${{ github.repository }}/actions/artifacts?per_page=100" \
+            --jq '[.artifacts[] | select(.name | startswith("validation-output-")) | select(.expired == false)] | sort_by(.created_at) | reverse | .[] | "\(.workflow_run.id) \(.name)"' > /tmp/validation_artifacts.txt
+          while read -r run_id name; do
+            [ -z "$run_id" ] && continue
+            rm -rf /tmp/recover && mkdir -p /tmp/recover
+            if gh run download "$run_id" \
+                 --repo "${{ github.repository }}" \
+                 --name "$name" \
+                 --dir /tmp/recover > /dev/null 2>&1 && \
+               [ -f /tmp/recover/comparison.json ]; then
+              echo "Recovered comparison.json from $name (run $run_id)"
+              cp /tmp/recover/comparison.json ./validation/
+              for f in temporal_coverage_archive.png temporal_coverage_ptype.png spatial_map_comparison.png; do
+                [ -f "/tmp/recover/$f" ] && cp "/tmp/recover/$f" ./validation/
+              done
+              find /tmp/recover -maxdepth 1 -name "*.csv" -exec cp {} ./validation/ \;
+              rm -rf /tmp/recover
+              break
+            fi
+          done < /tmp/validation_artifacts.txt
+          if [ ! -f ./validation/comparison.json ]; then
+            echo "No prior validation artifact had comparison.json — comparison section will be omitted."
+          fi
+
       - name: Run validation script
         run: |
           COMPARISON_MOUNT=""

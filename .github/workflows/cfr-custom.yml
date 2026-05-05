@@ -183,7 +183,10 @@ jobs:
             lipd_cfr.pkl
             prepare-data/skipped_records.csv
             prepare-data/proxy_type_breakdown.csv
-          retention-days: 7
+          # 90 days matches the lmr-reconstruction retention. With 7 days,
+          # validation re-runs more than a week after a full recon would
+          # silently lose the proxy comparison block (lipd_cfr.pkl gone).
+          retention-days: 90
 
   # ── Job 2: Run CFR reconstruction ─────────────────────────────────────────
   # Re-run this job alone (via "Re-run failed jobs") when only CFR config
