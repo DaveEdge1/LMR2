@@ -2,7 +2,7 @@
 
 # PReSto LMR Template
 
-By [David Edge](https://orcid.org/0000-0001-6938-2850), [Tanaya Gondhalekar](https://orcid.org/0009-0004-2440-3266), & [Julien Emile-Geay](https://orcid.org/0000-0001-5920-4751).
+By [David Edge](https://orcid.org/0000-0001-6938-2850), [Deborah Khider](https://orcid.org/0000-0001-7501-8430), [Nick McKay](https://orcid.org/0000-0003-3598-5113), [Tanaya Gondhalekar](https://orcid.org/0009-0004-2440-3266), & [Julien Emile-Geay](https://orcid.org/0000-0001-5920-4751).
 
 [PReSto](https://paleopresto.com) (Paleoclimate Reconstruction Storehouse) lowers the barriers to utilizing, reproducing, and customizing paleoclimate reconstructions. This repository is a template used by PReSto to run the Last Millennium Reanalysis (LMR) via GitHub Actions.
 

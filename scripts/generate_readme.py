@@ -307,6 +307,8 @@ def build_readme(query, configs, *, cleaning_report=None,
     lines.append(
         f"Built from the [PReSto LMR Template]({TEMPLATE_REPO}) by "
         "[David Edge](https://orcid.org/0000-0001-6938-2850), "
+        "[Deborah Khider](https://orcid.org/0000-0001-7501-8430), "
+        "[Nick McKay](https://orcid.org/0000-0003-3598-5113), "
         "[Tanaya Gondhalekar](https://orcid.org/0009-0004-2440-3266), & "
         "[Julien Emile-Geay](https://orcid.org/0000-0001-5920-4751). "
         f"Hosted by [PReSto]({PRESTO_URL})."
