@@ -90,15 +90,24 @@ jobs:
 
       - name: Download proxy database artifact
         if: steps.existing.outputs.skip != 'true'
+        # Fail-soft: lipd-cfr-data artifacts uploaded before the
+        # retention bump (7→90 days) are gone after a week. We still
+        # want the release to capture the NetCDFs and validation
+        # bundle even when the proxy pickle is unrecoverable.
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p ./bundle/proxy
-          gh run download "${{ steps.resolve.outputs.cfr_run_id }}" \
-            --repo "${{ github.repository }}" \
-            --name "lipd-cfr-data-${{ steps.resolve.outputs.cfr_run_id }}" \
-            --dir ./bundle/proxy
-          ls -lh ./bundle/proxy/
+          if gh run download "${{ steps.resolve.outputs.cfr_run_id }}" \
+               --repo "${{ github.repository }}" \
+               --name "lipd-cfr-data-${{ steps.resolve.outputs.cfr_run_id }}" \
+               --dir ./bundle/proxy 2>/dev/null; then
+            echo "lipd-cfr-data recovered:"
+            ls -lh ./bundle/proxy/
+          else
+            echo "lipd-cfr-data artifact unavailable (likely expired) — release will note its absence."
+          fi
 
       - name: Recover validation + comparison artifact
         if: steps.existing.outputs.skip != 'true'
@@ -151,13 +160,18 @@ jobs:
           REPO_NAME="${{ github.event.repository.name }}"
           PAGES_URL="https://${OWNER_LC}.github.io/${REPO_NAME}"
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ steps.resolve.outputs.cfr_run_id }}"
+          if [ -f ./bundle/proxy/lipd_cfr.pkl ]; then
+            PROXY_LINE="- \`lipd_cfr.pkl\` — the proxy database that was assimilated"
+          else
+            PROXY_LINE="- *\`lipd_cfr.pkl\` was not recoverable — the upstream artifact had already expired when this release was built. Future releases will include it (the underlying retention is now 90 days).*"
+          fi
           {
             echo "Reconstruction snapshot from cfr-custom run [#${{ steps.resolve.outputs.cfr_run_number }}](${RUN_URL})."
             echo ""
             echo "**Bundled assets**"
             echo ""
             echo "- \`combined_recon.nc\` / \`job_r01_recon.nc\` — reconstruction NetCDFs (Kalman-filter ensemble)"
-            echo "- \`lipd_cfr.pkl\` — the proxy database that was assimilated"
+            echo "${PROXY_LINE}"
             echo "- \`skipped_records.csv\`, \`proxy_type_breakdown.csv\` — pipeline drop log"
             echo "- \`validation.tar.gz\` — full validation page (HTML + plots) + proxy-comparison data"
             echo "- \`query_params.json\`, \`lmr_configs.yml\`, \`cleaning_report.json\`, \`README.md\` — inputs and run-context snapshot"
