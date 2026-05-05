@@ -493,7 +493,7 @@ ax.set_xlabel('Year CE')
 ax.set_ylabel('Temperature Anomaly (\u00b0C)')
 ax.set_title('Global Mean Surface Temperature')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),
-          ncol=5, frameon=False)
+          ncol=6, frameon=False)
 t_min = recon_time.min()
 if lmr_v21_time is not None:
     t_min = min(t_min, lmr_v21_time.min())
@@ -537,7 +537,7 @@ ax.set_xlabel('Year CE')
 ax.set_ylabel('Temperature Anomaly (\u00b0C)')
 ax.set_title(f'GMST: All {n_ens} Ensemble Members')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),
-          ncol=5, frameon=False)
+          ncol=6, frameon=False)
 t_min = recon_time.min()
 ax.set_xlim(t_min, 2000)
 ax.axhline(0, color='gray', lw=0.5, alpha=0.5)
@@ -566,7 +566,7 @@ ax.set_xlabel('Year CE')
 ax.set_ylabel('Temperature Anomaly (\u00b0C)')
 ax.set_title(f'GMST Ensemble Members: Instrumental Period ({VALID_START}-{VALID_END})')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),
-          ncol=5, frameon=False)
+          ncol=6, frameon=False)
 ax.grid(True, alpha=0.3)
 fig.savefig(os.path.join(OUT_DIR, 'gmst_ensemble_members_instrumental.png'),
             dpi=150, bbox_inches='tight')
@@ -639,7 +639,7 @@ ax.set_xlabel('Year CE')
 ax.set_ylabel('Temperature Anomaly (\u00b0C)')
 ax.set_title(f'Instrumental Validation Period ({VALID_START}-{VALID_END})')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),
-          ncol=5, frameon=False)
+          ncol=6, frameon=False)
 ax.axhline(0, color='gray', lw=0.5, alpha=0.5)
 ax.grid(True, alpha=0.3)
 fig.savefig(os.path.join(OUT_DIR, 'gmst_instrumental_detail.png'),
