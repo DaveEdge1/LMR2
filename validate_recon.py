@@ -187,7 +187,8 @@ def plot_temporal_coverage(rows, out_path):
     ax.set_xlabel('Year CE')
     ax.set_ylabel('Number of Records')
     ax.set_title('Temporal Coverage of Proxy Records by Archive Type')
-    ax.legend(loc='upper left', fontsize=8, ncol=2)
+    ax.legend(loc='upper left', bbox_to_anchor=(1.02, 1.0),
+              fontsize=8, ncol=1, borderaxespad=0, frameon=False)
     ax.set_xlim(lo, hi)
     fig.savefig(out_path, dpi=150, bbox_inches='tight')
     plt.close(fig)
@@ -491,7 +492,8 @@ if has_hadcrut:
 ax.set_xlabel('Year CE')
 ax.set_ylabel('Temperature Anomaly (\u00b0C)')
 ax.set_title('Global Mean Surface Temperature')
-ax.legend(loc='upper left')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),
+          ncol=5, frameon=False)
 t_min = recon_time.min()
 if lmr_v21_time is not None:
     t_min = min(t_min, lmr_v21_time.min())
@@ -534,7 +536,8 @@ ax.plot(obs_time, obs_1d, color='red', lw=1.5, label='GISTEMP', alpha=0.85)
 ax.set_xlabel('Year CE')
 ax.set_ylabel('Temperature Anomaly (\u00b0C)')
 ax.set_title(f'GMST: All {n_ens} Ensemble Members')
-ax.legend(loc='upper left')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),
+          ncol=5, frameon=False)
 t_min = recon_time.min()
 ax.set_xlim(t_min, 2000)
 ax.axhline(0, color='gray', lw=0.5, alpha=0.5)
@@ -562,7 +565,8 @@ if has_hadcrut:
 ax.set_xlabel('Year CE')
 ax.set_ylabel('Temperature Anomaly (\u00b0C)')
 ax.set_title(f'GMST Ensemble Members: Instrumental Period ({VALID_START}-{VALID_END})')
-ax.legend(loc='upper left')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),
+          ncol=5, frameon=False)
 ax.grid(True, alpha=0.3)
 fig.savefig(os.path.join(OUT_DIR, 'gmst_ensemble_members_instrumental.png'),
             dpi=150, bbox_inches='tight')
@@ -634,7 +638,8 @@ if has_hadcrut:
 ax.set_xlabel('Year CE')
 ax.set_ylabel('Temperature Anomaly (\u00b0C)')
 ax.set_title(f'Instrumental Validation Period ({VALID_START}-{VALID_END})')
-ax.legend(loc='upper left')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),
+          ncol=5, frameon=False)
 ax.axhline(0, color='gray', lw=0.5, alpha=0.5)
 ax.grid(True, alpha=0.3)
 fig.savefig(os.path.join(OUT_DIR, 'gmst_instrumental_detail.png'),

@@ -466,7 +466,7 @@ def build_ptype_table(custom, presto2k, used_tsids):
 # ═══════════════════════════════════════════════════════════════════════════
 
 def _temporal_plot(df_rows, group_key, title_suffix, out_path,
-                   color_fn=None, legend_cols=2):
+                   color_fn=None):
     """df_rows: iterable of dicts with time_start, time_end, archive, ptype, source."""
     recs = [(r['time_start'], r['time_end'], r[group_key], r['source'])
             for r in df_rows
@@ -506,7 +506,8 @@ def _temporal_plot(df_rows, group_key, title_suffix, out_path,
                    label=g, color=col, edgecolor='none')
             bottom += counts
         ax.set_ylabel(f'{label}\n# records')
-        ax.legend(loc='upper left', fontsize=7, ncol=legend_cols)
+        ax.legend(loc='upper left', bbox_to_anchor=(1.02, 1.0),
+                  fontsize=7, ncol=1, borderaxespad=0, frameon=False)
 
     ax_p.set_xlabel('Year CE')
     fig.suptitle(f'Temporal coverage — {title_suffix}', fontsize=13)
@@ -797,7 +798,7 @@ def main():
     tc_pt_ok = _temporal_plot(
         plot_rows, 'ptype', 'by proxy type (ptype)',
         os.path.join(out, 'temporal_coverage_ptype.png'),
-        color_fn=_pcol, legend_cols=3)
+        color_fn=_pcol)
 
     print('Rendering spatial map ...')
     plot_spatial_maps(custom, presto2k, pids_used,
