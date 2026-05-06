@@ -38,20 +38,47 @@ if os.path.exists(user_config_path):
     base_config.update(user_overrides)
     print(f'Loaded user overrides: {list(user_overrides.keys())}')
 
+# ── Validate recon_period early (before any expensive work) ──────────────────
+# Without this guard a swapped/equal recon_period silently produces zero chunks
+# and the workflow fails much later with a generic "no reconstruction
+# results" message.
+_rp = base_config.get('recon_period')
+if not isinstance(_rp, (list, tuple)) or len(_rp) < 2:
+    raise ValueError(
+        f'recon_period must be [start_year, end_year]; got {_rp!r}')
+_rp_start, _rp_end = int(_rp[0]), int(_rp[-1])
+if _rp_end < _rp_start:
+    raise ValueError(
+        f'recon_period end year ({_rp_end}) must be >= start year '
+        f'({_rp_start}); swap your endpoints')
+if _rp_end - _rp_start < 1:
+    raise ValueError(
+        f'recon_period must span at least 2 years for variance / CE '
+        f'computations; got [{_rp_start}, {_rp_end}]')
+
 # ── Auto-batch large ensemble sizes ──────────────────────────────────────────
+# Goal: total ensemble members (nens × n_seeds) stays constant. When
+# nens > NENS_BATCH we cap nens at NENS_BATCH and expand recon_seeds so the
+# product is preserved. The expansion must produce *unique* seed values —
+# duplicates run identical realizations and distort the mean.
 nens  = base_config.get('nens', NENS_BATCH)
 seeds = list(base_config.get('recon_seeds', [1]))
 
 if nens > NENS_BATCH:
     n_batches = math.ceil(nens / NENS_BATCH)
-    max_seed  = max(seeds)
-    extra_seeds = [s + b * max_seed for b in range(1, n_batches) for s in seeds]
-    base_config['nens']         = NENS_BATCH
-    base_config['recon_seeds']  = seeds + extra_seeds
+    needed = (n_batches - 1) * len(seeds)
+    # Generate sequential seeds starting just after the largest existing one.
+    # Sequential RNG seeds are statistically independent, so this is no worse
+    # than the prior scattered scheme and is collision-free by construction.
+    next_seed = max(seeds) + 1
+    extra_seeds = list(range(next_seed, next_seed + needed))
+    base_config['nens']        = NENS_BATCH
+    base_config['recon_seeds'] = seeds + extra_seeds
+    total_members = NENS_BATCH * len(base_config['recon_seeds'])
     print(f'Auto-batching: nens={nens} > {NENS_BATCH}; '
           f'running {n_batches} batches of {NENS_BATCH} '
-          f'({len(base_config["recon_seeds"])} total seeds, '
-          f'{NENS_BATCH * len(base_config["recon_seeds"])} total ensemble members)')
+          f'({len(base_config["recon_seeds"])} unique seeds, '
+          f'{total_members} total ensemble members)')
 else:
     print(f'nens={nens} <= {NENS_BATCH}; running {len(seeds)} seed(s) as configured')
 
