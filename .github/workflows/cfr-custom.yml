@@ -33,7 +33,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 200
     permissions:
-      contents: read
+      # Bumped from read → write so citation files can be committed to repo root.
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -131,6 +132,63 @@ jobs:
           else
             echo "ERROR: No LiPD data found (expected lipd_data.pkl or lipd_output/lipd_files.zip)"
             exit 1
+          fi
+
+      # Citations are extracted from the SOURCE data (.zip or legacy .pkl)
+      # BEFORE the CFR conversion below, because the converted lipd_cfr.pkl is
+      # a flattened DataFrame that no longer carries pub metadata.
+      # Skipped on prebuilt pathway (no source data to read pubs from).
+      - name: Generate citation files
+        if: steps.pathway.outputs.pathway != 'prebuilt'
+        run: |
+          UID="${{ inputs.unique_id }}"
+          [ -z "$UID" ] && UID=$(jq -r '.uniqueID // empty' query_params.json 2>/dev/null || echo "")
+          [ -z "$UID" ] && UID="${{ github.run_id }}"
+          mkdir -p citations_out
+
+          if [ -f lipd_output/lipd_files.zip ]; then
+            docker run --rm \
+              -v "$(pwd)/lipd_output/lipd_files.zip:/data/lipd_files.zip:ro" \
+              -v "$(pwd)/citations_out:/citations_out" \
+              davidedge/lipd_webapps:lipdGenerator \
+              citations /data/lipd_files.zip /citations_out \
+              --title="LMR Reconstruction $UID" \
+              --url="https://github.com/${{ github.repository }}" \
+              --unique-id="$UID"
+          elif [ -f lipd_data.pkl ]; then
+            docker run --rm \
+              -v "$(pwd)/lipd_data.pkl:/data/lipd_data.pkl:ro" \
+              -v "$(pwd)/citations_out:/citations_out" \
+              davidedge/lipd_webapps:lipdGenerator \
+              citations /data/lipd_data.pkl /citations_out \
+              --title="LMR Reconstruction $UID" \
+              --url="https://github.com/${{ github.repository }}" \
+              --unique-id="$UID"
+          else
+            echo "No source LiPD data found; skipping citation generation"
+          fi
+
+          ls -lh citations_out/ 2>/dev/null || true
+
+      - name: Commit citation files to repository
+        if: steps.pathway.outputs.pathway != 'prebuilt'
+        run: |
+          if [ ! -f citations_out/references.bib ] && [ ! -f citations_out/CITATION.cff ]; then
+            echo "No citation files generated; nothing to commit"
+            exit 0
+          fi
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          [ -f citations_out/references.bib ] && cp citations_out/references.bib references.bib && git add references.bib
+          [ -f citations_out/CITATION.cff ]   && cp citations_out/CITATION.cff   CITATION.cff   && git add CITATION.cff
+          if git diff --staged --quiet; then
+            echo "No citation file changes to commit"
+          else
+            git commit -m "Add citations for LMR reconstruction ${{ github.run_id }}"
+            # Retry on push race — another job/run may have pushed between checkout and now.
+            for i in 1 2 3; do
+              git pull --rebase origin "${{ github.ref_name }}" && git push && break || sleep $((i*5))
+            done
           fi
 
       - name: Pull Docker image
