@@ -146,26 +146,42 @@ jobs:
           [ -z "$RECON_ID" ] && RECON_ID="${{ github.run_id }}"
           mkdir -p citations_out
 
+          # If the repo already has a curated CITATION.cff (e.g. the platform-
+          # level CFF in the LMR2 template), merge a data-source addendum into
+          # it instead of overwriting. Bash-conditional mount keeps the docker
+          # command clean when no existing CFF is present.
+          MERGE_FLAG=""
+          EXTRA_MOUNT=""
+          if [ -f CITATION.cff ]; then
+            EXTRA_MOUNT="-v $(pwd)/CITATION.cff:/existing_cff/CITATION.cff:ro"
+            MERGE_FLAG="--merge-cff=/existing_cff/CITATION.cff"
+            echo "Existing CITATION.cff detected — will merge addendum"
+          fi
+
           if [ -f lipd_output/lipd_files.zip ]; then
             docker run --rm \
               -v "$(pwd)/lipd_output/lipd_files.zip:/data/lipd_files.zip:ro" \
               -v "$(pwd)/citations_out:/citations_out" \
+              $EXTRA_MOUNT \
               davidedge/lipd_webapps:lipdGenerator \
               citations /data/lipd_files.zip /citations_out \
               --title="LMR Reconstruction $RECON_ID" \
               --url="https://github.com/${{ github.repository }}" \
               --unique-id="$RECON_ID" \
-              --author="${{ github.repository_owner }}"
+              --author="${{ github.repository_owner }}" \
+              $MERGE_FLAG
           elif [ -f lipd_data.pkl ]; then
             docker run --rm \
               -v "$(pwd)/lipd_data.pkl:/data/lipd_data.pkl:ro" \
               -v "$(pwd)/citations_out:/citations_out" \
+              $EXTRA_MOUNT \
               davidedge/lipd_webapps:lipdGenerator \
               citations /data/lipd_data.pkl /citations_out \
               --title="LMR Reconstruction $RECON_ID" \
               --url="https://github.com/${{ github.repository }}" \
               --unique-id="$RECON_ID" \
-              --author="${{ github.repository_owner }}"
+              --author="${{ github.repository_owner }}" \
+              $MERGE_FLAG
           else
             echo "No source LiPD data found; skipping citation generation"
           fi
@@ -175,18 +191,18 @@ jobs:
       - name: Commit citation files to repository
         if: steps.pathway.outputs.pathway != 'prebuilt'
         run: |
-          if [ ! -f citations_out/references.bib ] && [ ! -f citations_out/CITATION.cff ]; then
+          if [ ! -f citations_out/data_references.bib ] && [ ! -f citations_out/CITATION.cff ]; then
             echo "No citation files generated; nothing to commit"
             exit 0
           fi
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
-          [ -f citations_out/references.bib ] && cp citations_out/references.bib references.bib && git add references.bib
-          [ -f citations_out/CITATION.cff ]   && cp citations_out/CITATION.cff   CITATION.cff   && git add CITATION.cff
+          [ -f citations_out/data_references.bib ] && cp citations_out/data_references.bib data_references.bib && git add data_references.bib
+          [ -f citations_out/CITATION.cff ]        && cp citations_out/CITATION.cff        CITATION.cff        && git add CITATION.cff
           if git diff --staged --quiet; then
             echo "No citation file changes to commit"
           else
-            git commit -m "Add citations for LMR reconstruction ${{ github.run_id }}"
+            git commit -m "Add data citations for LMR reconstruction ${{ github.run_id }}"
             # Retry on push race — another job/run may have pushed between checkout and now.
             for i in 1 2 3; do
               git pull --rebase origin "${{ github.ref_name }}" && git push && break || sleep $((i*5))
