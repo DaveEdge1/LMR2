@@ -154,7 +154,8 @@ jobs:
               citations /data/lipd_files.zip /citations_out \
               --title="LMR Reconstruction $RECON_ID" \
               --url="https://github.com/${{ github.repository }}" \
-              --unique-id="$RECON_ID"
+              --unique-id="$RECON_ID" \
+              --author="${{ github.repository_owner }}"
           elif [ -f lipd_data.pkl ]; then
             docker run --rm \
               -v "$(pwd)/lipd_data.pkl:/data/lipd_data.pkl:ro" \
@@ -163,7 +164,8 @@ jobs:
               citations /data/lipd_data.pkl /citations_out \
               --title="LMR Reconstruction $RECON_ID" \
               --url="https://github.com/${{ github.repository }}" \
-              --unique-id="$RECON_ID"
+              --unique-id="$RECON_ID" \
+              --author="${{ github.repository_owner }}"
           else
             echo "No source LiPD data found; skipping citation generation"
           fi
