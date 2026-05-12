@@ -141,9 +141,9 @@ jobs:
       - name: Generate citation files
         if: steps.pathway.outputs.pathway != 'prebuilt'
         run: |
-          UID="${{ inputs.unique_id }}"
-          [ -z "$UID" ] && UID=$(jq -r '.uniqueID // empty' query_params.json 2>/dev/null || echo "")
-          [ -z "$UID" ] && UID="${{ github.run_id }}"
+          RECON_ID="${{ inputs.unique_id }}"
+          [ -z "$RECON_ID" ] && RECON_ID=$(jq -r '.uniqueID // empty' query_params.json 2>/dev/null || echo "")
+          [ -z "$RECON_ID" ] && RECON_ID="${{ github.run_id }}"
           mkdir -p citations_out
 
           if [ -f lipd_output/lipd_files.zip ]; then
@@ -152,18 +152,18 @@ jobs:
               -v "$(pwd)/citations_out:/citations_out" \
               davidedge/lipd_webapps:lipdGenerator \
               citations /data/lipd_files.zip /citations_out \
-              --title="LMR Reconstruction $UID" \
+              --title="LMR Reconstruction $RECON_ID" \
               --url="https://github.com/${{ github.repository }}" \
-              --unique-id="$UID"
+              --unique-id="$RECON_ID"
           elif [ -f lipd_data.pkl ]; then
             docker run --rm \
               -v "$(pwd)/lipd_data.pkl:/data/lipd_data.pkl:ro" \
               -v "$(pwd)/citations_out:/citations_out" \
               davidedge/lipd_webapps:lipdGenerator \
               citations /data/lipd_data.pkl /citations_out \
-              --title="LMR Reconstruction $UID" \
+              --title="LMR Reconstruction $RECON_ID" \
               --url="https://github.com/${{ github.repository }}" \
-              --unique-id="$UID"
+              --unique-id="$RECON_ID"
           else
             echo "No source LiPD data found; skipping citation generation"
           fi
