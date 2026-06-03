@@ -409,7 +409,7 @@ jobs:
       - name: Combine seed runs into combined_recon.nc
         run: |
           echo "Combining all seed runs into combined_recon.nc for visualization..."
-          docker run --rm             -v $(pwd)/scripts/combine_seeds.py:/app/combine_seeds.py:ro             -v $(pwd)/recons:/recons             davidedge/lmr2:latest             python /app/combine_seeds.py
+          docker run --rm             -e PYTHONUNBUFFERED=1             -v $(pwd)/scripts/combine_seeds.py:/app/combine_seeds.py:ro             -v $(pwd)/recons:/recons             davidedge/lmr2:latest             python -u /app/combine_seeds.py
 
       # Reconstruction outputs are NOT committed to git. combined_recon.nc
       # is ~250 MB (10 seeds × ens=100 × 1171 yrs of tas_gm), well over

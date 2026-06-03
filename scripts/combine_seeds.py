@@ -1,7 +1,18 @@
 import glob
 import os
+import dask
 import numpy as np
 import xarray as xr
+
+# Combining a handful of small NetCDFs is trivial compute, but the default
+# dask "threads" scheduler serialises every worker read and the final write
+# through HDF5's global lock. That lock ordering occasionally inverts and
+# to_netcdf() deadlocks with zero CPU and no error (the "combine seeds" step
+# in presto-LMR run 26911314285 hung for 45+ min while a byte-identical run
+# finished in 20 s). The synchronous scheduler runs one chunk at a time in the
+# main thread — no lock contention, and peak memory is still bounded by
+# CHUNK_TIME — so the deadlock cannot occur.
+dask.config.set(scheduler='synchronous')
 
 RECON_DIR  = '/recons'
 CHUNK_TIME = 50   # time steps materialised at once during write (~few MB/chunk)
@@ -10,7 +21,7 @@ OUT_PATH   = os.path.join(RECON_DIR, 'combined_recon.nc')
 files = sorted(glob.glob(os.path.join(RECON_DIR, 'job_r*_recon.nc')))
 if not files:
     raise RuntimeError(f'No job_r*_recon.nc files found in {RECON_DIR}')
-print(f'Combining {len(files)} seed file(s): {[os.path.basename(f) for f in files]}')
+print(f'Combining {len(files)} seed file(s): {[os.path.basename(f) for f in files]}', flush=True)
 
 tas_list    = []
 tas_gm_list = []
@@ -46,6 +57,6 @@ out = xr.Dataset({'tas': tas, 'tas_gm': tas_gm})
 encoding = {v: _encoding(out[v]) for v in out.data_vars}
 out.to_netcdf(OUT_PATH, encoding=encoding)
 
-print(f'combined_recon.nc written: {OUT_PATH}')
-print(f'  tas    {dict(tas.sizes)}')
-print(f'  tas_gm {dict(tas_gm.sizes)}')
+print(f'combined_recon.nc written: {OUT_PATH}', flush=True)
+print(f'  tas    {dict(tas.sizes)}', flush=True)
+print(f'  tas_gm {dict(tas_gm.sizes)}', flush=True)
