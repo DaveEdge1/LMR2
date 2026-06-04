@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17819391.svg)](https://doi.org/10.5281/zenodo.17819391)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17819458.svg)](https://doi.org/10.5281/zenodo.17819458)
 
 # PReSto LMR Template
 
