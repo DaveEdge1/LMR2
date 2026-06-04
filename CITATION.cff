@@ -1,22 +1,19 @@
 cff-version: 1.2.0
-message: "If you use this reconstruction, please cite the references below."
-title: "The Paleoclimate Reconstruction Storehouse (PReSto) platform"
+title: "Last Millenium Reanalysis PReSto Template"
 type: software
 authors:
   - family-names: Edge
     given-names: Dave
-  - family-names: Erb
-    given-names: Michael
+  - family-names: Emile-Geay
+    given-names: Julien
   - family-names: McKay
     given-names: Nicholas
   - family-names: Zhu
     given-names: Feng
+  - family-names: Erb
+    given-names: Michael
   - family-names: Khider
     given-names: Deborah
-  - family-names: Emile-Geay
-    given-names: Julien
-  - family-names: Routson
-    given-names: Cody
 doi: 10.5281/zenodo.8274756
 version: alpha-release
 date-released: "2023-08-25"
