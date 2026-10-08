@@ -103,6 +103,15 @@ jobs:
 
           ls -lh lipd_data.pkl
 
+      # POOL PATHWAY: a pinned PReSto data pool (paleopresto/presto-recipes
+      # pools/), selected from all of LiPDverse by the PAGES 2k (2017) criteria and
+      # deduplicated; fetched and checksum-verified by the fetch-pool action.
+      - name: Fetch PReSto pool bundle
+        if: steps.pathway.outputs.pathway == 'github_actions' && steps.pathway.outputs.mode == 'bundle'
+        uses: paleopresto/presto-recipes/.github/actions/fetch-pool@pools
+        with:
+          format: lpdzip
+
       # GITHUB ACTIONS PATHWAY - PATH B: Filtered Query (lipdGenerator Docker)
       - name: Generate LiPD data from query
         if: steps.pathway.outputs.pathway == 'github_actions' && steps.pathway.outputs.mode == 'filtered'
