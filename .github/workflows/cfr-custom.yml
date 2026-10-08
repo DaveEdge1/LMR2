@@ -222,13 +222,13 @@ jobs:
         if: steps.pathway.outputs.pathway != 'prebuilt'
         run: docker pull davidedge/lmr2:latest
 
-      # FILTERED PATHWAY: lipd_files.zip → cfr.ProxyDatabase (direct JSON parsing, no SPARQL)
+      # FILTERED and POOL PATHWAYS: lipd_files.zip → cfr.ProxyDatabase (direct JSON parsing, no SPARQL)
       # query_params.json is passed so lipd_to_pdb.py can filter the extracted
       # paleoData rows to only those TSIDs presto requested — without this,
       # every sibling column in each .lpd (sampleCount, EPS, RBAR, alternate
       # chronology flavors) leaks in as a pseudo-proxy.
       - name: Convert LiPD to ProxyDatabase (filtered pathway)
-        if: steps.pathway.outputs.pathway == 'github_actions' && steps.pathway.outputs.mode == 'filtered'
+        if: steps.pathway.outputs.pathway == 'github_actions' && (steps.pathway.outputs.mode == 'filtered' || steps.pathway.outputs.mode == 'bundle')
         run: |
           echo "Converting .lpd files to cfr.ProxyDatabase using lipd_to_pdb.py ..."
           docker run --rm \
@@ -242,7 +242,7 @@ jobs:
 
       # ARCHIVED / TRADITIONAL PATHWAY: legacy LiPD dict pickle → CFR DataFrame
       - name: Convert LiPD format (archived/traditional pathway)
-        if: steps.pathway.outputs.pathway != 'prebuilt' && steps.pathway.outputs.mode != 'filtered'
+        if: steps.pathway.outputs.pathway != 'prebuilt' && steps.pathway.outputs.mode != 'filtered' && steps.pathway.outputs.mode != 'bundle'
         run: |
           echo "Converting LiPD pickle to CFR format using convert_lipd_to_cfr_dataframe.py ..."
           docker run --rm \
