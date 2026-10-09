@@ -32,6 +32,8 @@ jobs:
   prepare-data:
     runs-on: ubuntu-latest
     timeout-minutes: 200
+    outputs:
+      seed_groups: ${{ steps.seeds.outputs.groups }}
     permissions:
       # Bumped from read → write so citation files can be committed to repo root.
       contents: write
@@ -39,6 +41,28 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # Split recon_seeds over parallel reconstruct jobs. Each seed is an
+      # independent Kalman filter run written to its own job_r<seed>_recon.nc,
+      # so the seeds can run on separate runners and be combined afterwards.
+      # A hosted job stops at 6 h (and this one at 240 min); one seed of a
+      # ~900-record pool takes ~24 min, so 10 seeds in one job do not fit.
+      # presto_seed_jobs in lmr_configs.yml sets the number of jobs (default 1).
+      - name: Plan seed groups
+        id: seeds
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, yaml
+          c = yaml.safe_load(open('lmr_configs.yml')) or {}
+          seeds = list(c.get('recon_seeds', [1]))
+          n = max(1, min(int(c.get('presto_seed_jobs', 1)), len(seeds)))
+          if n > 1 and c.get('nens', 100) > 100:
+              raise SystemExit('presto_seed_jobs > 1 needs nens <= 100 '
+                               '(cfr_main_code.py expands recon_seeds when nens > 100)')
+          groups = [seeds[i::n] for i in range(n)]
+          print('groups=' + json.dumps([{'i': i + 1, 'seeds': g} for i, g in enumerate(groups)]))
+          PY
+          cat "$GITHUB_OUTPUT"
 
       # Detect which pathway to use.
       # Priority order:
@@ -289,7 +313,12 @@ jobs:
     needs: prepare-data
     if: inputs.prepare_only != true
     runs-on: ubuntu-latest
-    timeout-minutes: 240
+    timeout-minutes: 300
+    strategy:
+      fail-fast: true
+      matrix:
+        group: ${{ fromJSON(needs.prepare-data.outputs.seed_groups) }}
+    name: reconstruct (seeds ${{ join(matrix.group.seeds, ',') }})
     permissions:
       contents: write
 
@@ -382,6 +411,20 @@ jobs:
           sys.exit(0 if ok else 1)
           "
 
+      - name: Write this job's config (its recon_seeds)
+        env:
+          SEEDS: ${{ toJSON(matrix.group.seeds) }}
+        run: |
+          python3 - <<'PY'
+          import json, yaml
+          c = yaml.safe_load(open('lmr_configs.yml')) or {}
+          import os
+          c['recon_seeds'] = json.loads(os.environ['SEEDS'])
+          c.pop('presto_seed_jobs', None)
+          yaml.safe_dump(c, open('job_configs.yml', 'w'), sort_keys=False)
+          print('recon_seeds:', c['recon_seeds'])
+          PY
+
       - name: Run CFR reconstruction
         run: |
           echo "Running LMR CFR reconstruction..."
@@ -397,7 +440,7 @@ jobs:
           docker run --rm \
             -e TQDM_MININTERVAL=30 \
             -v $(pwd)/scripts/cfr_main_code.py:/app/cfr_main_code.py:ro \
-            -v $(pwd)/lmr_configs.yml:/app/user_config.yml:ro \
+            -v $(pwd)/job_configs.yml:/app/user_config.yml:ro \
             -v $(pwd)/lipd_cfr.pkl:/app/lipd_cfr.pkl:ro \
             -v $(pwd)/recons:/recons \
             -v $(pwd)/prior_data/pr_sfc_Amon_CCSM4_past1000_085001-185012.nc:/app/data/pr_sfc_Amon_CCSM4_past1000_085001-185012.nc:ro \
@@ -414,6 +457,35 @@ jobs:
             echo "ERROR: No reconstruction results generated"
             exit 1
           fi
+
+      - name: Upload this job's seed files
+        uses: actions/upload-artifact@v4
+        with:
+          name: lmr-seeds-${{ matrix.group.i }}-${{ github.run_id }}
+          path: ./recons/
+          retention-days: 7
+
+  # ── Job 3: Combine the seed groups ────────────────────────────────────────
+  finalize:
+    needs: reconstruct
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download seed files
+        uses: actions/download-artifact@v4
+        with:
+          pattern: lmr-seeds-*-${{ github.run_id }}
+          path: ./recons
+          merge-multiple: true
+
+      - name: Pull Docker image
+        run: docker pull davidedge/lmr2:latest
 
       - name: Combine seed runs into combined_recon.nc
         run: |
