@@ -334,8 +334,12 @@ jobs:
       - name: Pull Docker image
         run: docker pull davidedge/lmr2:latest
 
+      # recons/ in the repo holds an example run (job_r01_recon.nc,
+      # combined_recon.nc). Start empty, so this job uploads only its own
+      # seeds: a stale job_r01 in one group's artifact overwrote the real
+      # seed 1 when finalize merged the artifacts (run 37984835037).
       - name: Create results directory
-        run: mkdir -p ./recons
+        run: rm -rf ./recons && mkdir -p ./recons
 
       # CCSM4 past1000 prior fetch — bypasses cfr's broken cache.
       # cfr/climate.py:138 does an unguarded os.path.exists() check before
@@ -476,6 +480,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Clear example outputs
+        run: rm -rf ./recons
 
       - name: Download seed files
         uses: actions/download-artifact@v4
