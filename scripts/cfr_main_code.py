@@ -184,6 +184,15 @@ t_s = time.time()
 for seed in recon_seeds:
     print(f'>>> seed: {seed} | max: {recon_seeds[-1]}')
 
+    # cfr's split_proxydb only adds 'assim'/'eval' tags and never removes
+    # them, so without this a record drawn for assimilation by any earlier
+    # seed stays assimilated: by the 5th seed of a job nearly every record is
+    # assimilated and the eval set overlaps it (cfr 2025.7.28; its own
+    # run_da_mc has the same loop). Clear only these two tags; cfr's
+    # clear_proxydb_tags() would also drop 'calibrated', which the split
+    # filters on.
+    for _pobj in job_cfg.proxydb.records.values():
+        _pobj.tags = set(_pobj.tags) - {'assim', 'eval'}
     job_cfg.split_proxydb(seed=seed, assim_frac=assim_frac, verbose=False)
 
     chunk_files = []
