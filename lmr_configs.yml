@@ -25,6 +25,14 @@ recon_loc_rad: 25000
 proxydb_path: /app/lipd_cfr.pkl
 save_dirpath: /recons
 
+# PReSto checks applied after PSM calibration (scripts/cfr_main_code.py).
+# interpretation_screen: drop a record whose calibration contradicts its
+#   metadata interpretation (variable or direction); see psm_screen.csv.
+# r_floor: relative floors each record's error variance R at 1% of its own
+#   variance (and at 0.01); fixed uses only the 0.01 floor.
+interpretation_screen: true
+r_floor: relative
+
 # Archive / ptype whitelist — matches PReSto2k's coverage. cfr assigns a
 # Linear PSM with [tas] input by default for ptypes not in ptype_psm_dict,
 # so the five extra archives (marine, sclerosponge, speleothem, borehole,

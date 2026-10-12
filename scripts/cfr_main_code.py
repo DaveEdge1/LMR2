@@ -252,15 +252,26 @@ del _df
 
 # ── Phase 2: enforce minimum R floor ─────────────────────────────────────────
 # PSMmse=0 → ob_err=0, combined with varye=0 (flat PSM slope) → kdenom=0
-# → Kalman gain blows up. Apply MIN_R to all calibrated records.
+# → Kalman gain blows up. r_floor: relative (default) also floors R at 1% of
+# each record's own variance, so its noise standard deviation is at least a
+# tenth of its variability whatever its units; the fixed MIN_R stays as a
+# lower bound. r_floor: fixed keeps only MIN_R.
+r_floor = base_config.get('r_floor', 'relative')
+if r_floor not in ('relative', 'fixed'):
+    raise ValueError(f"r_floor must be 'relative' or 'fixed', not {r_floor!r}")
 n_floor = 0
 for pid, pobj in job_cfg.proxydb.records.items():
     r_val = getattr(pobj, 'R', None)
-    if r_val is not None and np.isfinite(r_val) and r_val < MIN_R:
-        pobj.R = MIN_R
+    if r_val is None or not np.isfinite(r_val):
+        continue
+    floor = MIN_R
+    if r_floor == 'relative':
+        floor = max(floor, 0.01 * float(np.nanvar(np.asarray(pobj.value, dtype=float))))
+    if r_val < floor:
+        pobj.R = floor
         n_floor += 1
 if n_floor:
-    print(f'R floor: raised {n_floor} record(s) from PSMmse < {MIN_R} to {MIN_R}')
+    print(f'R floor ({r_floor}): raised {n_floor} record(s)')
 
 # ── Phase 2.5: Auto-trim recon start year based on proxy coverage ───────────
 # cfr iterates over every year in recon_period regardless of proxy availability.
