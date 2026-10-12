@@ -5,7 +5,10 @@ import math
 import gc
 import time
 import numpy as np
+import pandas as pd
 import xarray as xr
+import json
+import re
 
 # Maximum ensemble members per sequential run.
 # Above this, nens is capped here and recon_seeds is expanded so that
@@ -105,17 +108,170 @@ if os.path.exists(_pdb_path):
 
 job_cfg.prep_da_cfg('/tmp/merged_config.yml', verbose=True)
 
+# ── Phase 1.5: interpretation against PSM ────────────────────────────────────
+# Any record may enter, but a calibrated record is dropped when its metadata
+# contradicts the PSM it was calibrated with:
+#   - it has interpretations, and none names a variable the PSM uses (a
+#     salinity coral, sea-ice sodium, or a precipitation-isotope-only record
+#     under a tas PSM; Bilinear TRW takes a temperature or a hydroclimate
+#     interpretation);
+#   - an interpretation that names a PSM variable gives a direction, and no
+#     calibration season gives a slope of that sign. cfr picks the season by
+#     adjusted R2 alone; when its pick has the wrong sign, the record is
+#     recalibrated on the best season that has the right one.
+# A record with no interpretation whose variable is itself a climate variable
+# (a "precipitation" or "PDSI" reconstruction) is treated as interpreted as
+# that variable, positively. Any other record with no interpretation is left
+# to its calibration. Interpretations
+# come from lipd_to_pdb.py's paleoData_interpretations column; a pre-built
+# cfr.ProxyDatabase has none, and the check is skipped.
+INTERP_CLASSES = [
+    # (pattern on the lowercased variable, PSM variable, sign of the
+    #  variable relative to it); first match wins.
+    (r'isotope|deuterium|excess|d18o|dd$', None, None),
+    (r'temp|^sst$|^t$|degree.?day', 'tas', 1),
+    (r'vpd|vapou?r.?pressure.?deficit|aridity|evapo', 'pr', -1),
+    (r'drought', 'pr', None),
+    (r'precip|moisture|pdsi|spei|^spi$|humid|^p-e$|^p_e$|rain|streamflow|runoff|wet', 'pr', 1),
+]
+
+
+def _interp_class(variable):
+    v = str(variable).lower().strip()
+    for pat, var, sign in INTERP_CLASSES:
+        if re.search(pat, v):
+            return var, sign
+    return None, None
+
+
+def _direction(d):
+    d = str(d or '').lower().strip()
+    if d in ('positive', 'increase', 'positively correlated'):
+        return 1
+    if d in ('negative', 'decrease', 'negatively correlated'):
+        return -1
+    return None
+
+
+def _signs_ok(model, expected):
+    return all(var in model.params and np.sign(model.params[var]) == e for var, e in expected.items())
+
+
+def _refit_signed(pobj, expected, seasons, calib_period):
+    """Recalibrate on the best season (by adjusted R2, as cfr chooses) whose
+    slopes have the expected signs. cfr's season search ignores sign, so a
+    winter or previous-year season with a negative response can beat a
+    positive summer one. Returns the season, or None (the PSM is then left
+    as cfr fitted it)."""
+    seasons = seasons if isinstance(seasons[0], list) else [seasons]
+    bilinear = type(pobj.psm).__name__ == 'Bilinear'
+    combos = [(a, b) for a in seasons for b in seasons] if bilinear else [(a,) for a in seasons]
+    fit = (lambda c: pobj.psm.calibrate(season_list1=[c[0]], season_list2=[c[1]], calib_period=calib_period)) \
+        if bilinear else (lambda c: pobj.psm.calibrate(season_list=[c[0]], calib_period=calib_period))
+    original = pobj.psm.calib_details['seasonality']
+    best = None
+    for c in combos:
+        fit(c)
+        m = pobj.psm.model
+        if m is not None and _signs_ok(m, expected) and (best is None or m.rsquared_adj > best[0]):
+            best = (m.rsquared_adj, c)
+    fit(best[1] if best else (original if bilinear else (original,)))
+    if best is None:
+        return None
+    pobj.R = pobj.psm.calib_details['PSMmse']
+    pobj.pseudo = pobj.psm.forward()
+    return best[1]
+
+
+def screen_interpretations(job, df, clim_dict, out_csv):
+    interp = dict(zip(df['paleoData_pages2kID'].astype(str), df['paleoData_interpretations']))
+    season_dict = job.configs.get('ptype_season_dict') or {}
+    calib_period = job.configs.get('psm_calib_period', [1850, 2015])
+    rows = []
+    for pid, pobj in job.proxydb.records.items():
+        if 'calibrated' not in pobj.tags:
+            continue
+        psm_vars = list(clim_dict.get(pobj.ptype, ['tas']))
+        ii = json.loads(interp.get(str(pid)) or '[]')
+        classes = [(i['variable'],) + _interp_class(i['variable']) + (_direction(i['direction']),) for i in ii]
+        implied = False
+        if not classes:
+            var, sign = _interp_class(pobj.value_name or '')
+            if var is not None:
+                classes, implied = [(str(pobj.value_name), var, sign, 1)], True
+        matched = [c for c in classes if c[1] in psm_vars]
+        status, detail = 'pass', 'interpretation implied by variable name;' if implied else ''
+        season0 = pobj.psm.calib_details['seasonality']
+        if not classes:
+            status = 'uninterpreted'
+        elif not matched:
+            status, detail = 'drop_interpretation', ';'.join(sorted({c[0] for c in classes}))
+        else:
+            # expected sign of the slope on each PSM variable: the
+            # interpretation's direction times the sign of the interpreted
+            # variable relative to it; conflicting directions are not checked
+            expected = {}
+            for var in psm_vars:
+                exp = {c[3] * c[2] for c in matched if c[1] == var and c[2] is not None and c[3] is not None}
+                if len(exp) == 1:
+                    expected[var] = exp.pop()
+                elif len(exp) > 1:
+                    detail += f'{var}: conflicting directions, not checked;'
+            if expected and not _signs_ok(pobj.psm.model, expected):
+                sn = _refit_signed(pobj, expected, season_dict.get(pobj.ptype, [list(range(1, 13))]), calib_period)
+                if sn is None:
+                    status = 'drop_direction'
+                    detail += 'no season gives the interpreted sign;'
+                else:
+                    status = 'pass_reseasoned'
+                    detail += f'season {season0} -> {list(sn) if len(sn) > 1 else sn[0]};'
+        if status.startswith('drop'):
+            pobj.tags.discard('calibrated')
+        params = pobj.psm.model.params
+        rows.append(dict(pid=pid, ptype=pobj.ptype, psm_vars='+'.join(psm_vars), status=status, detail=detail,
+                         interpretations='; '.join(f'{c[0]} ({c[3] if c[3] is not None else "?"})' for c in classes),
+                         fitR2adj=pobj.psm.calib_details['fitR2adj'],
+                         **{f'slope_{v}': params.get(v, np.nan) for v in ('tas', 'pr')}))
+    tab = pd.DataFrame(rows)
+    os.makedirs(os.path.dirname(out_csv), exist_ok=True)
+    tab.to_csv(out_csv, index=False)
+    print('Interpretation against PSM:', tab.status.value_counts().to_dict(), f'-> {out_csv}')
+    return tab
+
+
+_df = pd.read_pickle(_pdb_path) if os.path.exists(_pdb_path) else None
+if base_config.get('interpretation_screen', True) and isinstance(_df, pd.DataFrame) \
+        and 'paleoData_interpretations' in _df:
+    _clim = dict(base_config.get('ptype_clim_dict') or {})
+    screen_interpretations(job_cfg, _df, _clim,
+                           os.path.join(base_config.get('save_dirpath', '/recons'), 'psm_screen.csv'))
+else:
+    print('Interpretation against PSM: skipped (no paleoData_interpretations column, '
+          'or interpretation_screen: false)')
+del _df
+
 # ── Phase 2: enforce minimum R floor ─────────────────────────────────────────
 # PSMmse=0 → ob_err=0, combined with varye=0 (flat PSM slope) → kdenom=0
-# → Kalman gain blows up. Apply MIN_R to all calibrated records.
+# → Kalman gain blows up. r_floor: relative (default) also floors R at 1% of
+# each record's own variance, so its noise standard deviation is at least a
+# tenth of its variability whatever its units; the fixed MIN_R stays as a
+# lower bound. r_floor: fixed keeps only MIN_R.
+r_floor = base_config.get('r_floor', 'relative')
+if r_floor not in ('relative', 'fixed'):
+    raise ValueError(f"r_floor must be 'relative' or 'fixed', not {r_floor!r}")
 n_floor = 0
 for pid, pobj in job_cfg.proxydb.records.items():
     r_val = getattr(pobj, 'R', None)
-    if r_val is not None and np.isfinite(r_val) and r_val < MIN_R:
-        pobj.R = MIN_R
+    if r_val is None or not np.isfinite(r_val):
+        continue
+    floor = MIN_R
+    if r_floor == 'relative':
+        floor = max(floor, 0.01 * float(np.nanvar(np.asarray(pobj.value, dtype=float))))
+    if r_val < floor:
+        pobj.R = floor
         n_floor += 1
 if n_floor:
-    print(f'R floor: raised {n_floor} record(s) from PSMmse < {MIN_R} to {MIN_R}')
+    print(f'R floor ({r_floor}): raised {n_floor} record(s)')
 
 # ── Phase 2.5: Auto-trim recon start year based on proxy coverage ───────────
 # cfr iterates over every year in recon_period regardless of proxy availability.
@@ -184,6 +340,15 @@ t_s = time.time()
 for seed in recon_seeds:
     print(f'>>> seed: {seed} | max: {recon_seeds[-1]}')
 
+    # cfr's split_proxydb only adds 'assim'/'eval' tags and never removes
+    # them, so without this a record drawn for assimilation by any earlier
+    # seed stays assimilated: by the 5th seed of a job nearly every record is
+    # assimilated and the eval set overlaps it (cfr 2025.7.28; its own
+    # run_da_mc has the same loop). Clear only these two tags; cfr's
+    # clear_proxydb_tags() would also drop 'calibrated', which the split
+    # filters on.
+    for _pobj in job_cfg.proxydb.records.values():
+        _pobj.tags = set(_pobj.tags) - {'assim', 'eval'}
     job_cfg.split_proxydb(seed=seed, assim_frac=assim_frac, verbose=False)
 
     chunk_files = []
