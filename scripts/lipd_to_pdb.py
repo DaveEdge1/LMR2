@@ -44,6 +44,25 @@ PTYPE_MAP = {
     ('wood',            'ringwidth'):                 'tree.TRW',
     ('wood',            'ring width'):                'tree.TRW',
     ('wood',            'mxd'):                       'tree.MXD',
+    # LiPDverse records MXD as archiveType Wood, proxy "maximum latewood
+    # density" (or variable "density"), and Sr/Ca with the slash; without
+    # these, MXD fell to the archive default tree.TRW (Bilinear tas+pr) and
+    # Sr/Ca to coral.d18O / sclerosponge.d18O.
+    ('wood',            'maximum latewood density'):  'tree.MXD',
+    ('wood',            'density'):                   'tree.MXD',
+    ('coral',           'sr/ca'):                     'coral.SrCa',
+    ('sclerosponge',    'sr/ca'):                     'sclerosponge.SrCa',
+    # Tree-ring isotopes are not ring widths: without these they fell to the
+    # archive default tree.TRW (Bilinear tas+pr). Non-isotope ice and coral
+    # columns (sodium, d-excess, d13C) are labeled as what they are; their
+    # PSM is the default Linear on tas either way.
+    ('wood',            'd18o'):                      'tree.d18O',
+    ('wood',            'd13c'):                      'tree.d13C',
+    ('tree',            'd18o'):                      'tree.d18O',
+    ('tree',            'd13c'):                      'tree.d13C',
+    ('glacierice',      'deuteriumexcess'):           'ice.dexcess',
+    ('glacierice',      'd-excess'):                  'ice.dexcess',
+    ('coral',           'd13c'):                      'coral.d13C',
     ('coral',           'd18o'):                      'coral.d18O',
     ('coral',           'srca'):                      'coral.SrCa',
     ('coral',           'calcification'):             'coral.calc',
@@ -87,8 +106,8 @@ ARCHIVE_DEFAULTS = {
     'tree':                 'tree.TRW',
     'wood':                 'tree.TRW',
     'coral':                'coral.d18O',
-    'ice core':             'ice.d18O',
-    'glacierice':           'ice.d18O',
+    'ice core':             'ice.other',
+    'glacierice':           'ice.other',
     'lake sediment':        'lake.other',
     'lakesediment':         'lake.other',
     'marine sediment':      'marine.other',
@@ -121,6 +140,25 @@ def create_ptype(archive_type, standard_name):
         if (a == arch or a.replace(' ', '') == arch_nsp) and s and s in std:
             return ptype
     return ARCHIVE_DEFAULTS.get(arch, ARCHIVE_DEFAULTS.get(arch_nsp, f'{arch}.unknown'))
+
+
+# ── Interpretations ───────────────────────────────────────────────────────────
+# Every climate- and isotope-scope interpretation of the column, as
+# [{'scope', 'variable', 'direction'}], for cfr_main_code.py's check of
+# interpretation against PSM. pylipd returns each LiPD interpretation as
+# several dicts (rank and the rest separately); only those naming a variable
+# are kept.
+def interpretations(row):
+    out = []
+    for i in row.get('paleoData_interpretation') or []:
+        if not isinstance(i, dict):
+            continue
+        v = str(i.get('variable') or '').strip()
+        scope = str(i.get('scope') or 'climate').strip().lower()
+        if v and v.lower() not in ('na', 'nan', 'none') and scope in ('climate', 'isotope'):
+            out.append({'scope': scope, 'variable': v,
+                        'direction': str(i.get('direction') or '').strip()})
+    return out
 
 
 # ── Seasonality conversion ────────────────────────────────────────────────────
@@ -318,10 +356,25 @@ def main():
         with open(os.devnull, 'w') as devnull:
             _real_stdout, _real_stderr = sys.stdout, sys.stderr
             sys.stdout, sys.stderr = devnull, devnull
+            # One dataset pylipd cannot read (a proxy term without a label,
+            # say) fails get_timeseries for all; fall back to one dataset at
+            # a time and skip, with a record in skipped_records.csv, those
+            # that fail.
+            unreadable = {}
             try:
                 result = L.get_timeseries(all_ds)
+            except Exception:
+                result = {}
+                for ds in all_ds:
+                    try:
+                        r = L.get_timeseries([ds])
+                        result.update(r if isinstance(r, dict) else {ds: r})
+                    except Exception as ex:
+                        unreadable[ds] = f'{type(ex).__name__}: {ex}'
             finally:
                 sys.stdout, sys.stderr = _real_stdout, _real_stderr
+        for ds, err in unreadable.items():
+            print(f"  pylipd could not read {ds} ({err}); skipped")
 
         # Normalise whatever get_timeseries() returns into a flat list of dicts.
         # pylipd API has varied across versions:
@@ -384,7 +437,9 @@ def main():
     SKIP_NOT_REQUESTED   = 'TSID not in query_params.tsids whitelist'
     SKIP_NO_TSID         = 'row has no paleoData_TSid'
 
-    skip_records = []              # per-record details for CSV
+    skip_records = [{'dataSetName': ds, 'TSID': '', 'variableName': '', 'archiveType': '',
+                     'reason': f'pylipd could not read the dataset ({err})'}
+                    for ds, err in unreadable.items()]   # per-record details for CSV
 
     def _skip(reason, row, archive=None):
         nonlocal n_skip
@@ -420,6 +475,19 @@ def main():
         if val_arr is None:
             _skip(SKIP_MISSING_VALUES, row, archive)
             continue
+
+        # Missing-value codes left in the data (the column's missingValue, or
+        # the usual -9999 / -999 / -99999) are missing, not values: 31 -9999s
+        # in Skilak.Thomas.2021 density gave it a variance of 2e5 and, with
+        # the R floor, an SNR of 4000 (presto-paper, 2026-10-12).
+        sentinels = {-9999.0, -999.0, -99999.0}
+        try:
+            mv = row.get('paleoData_missingValue', row.get('missingValue'))
+            if mv is not None and str(mv).strip().lower() not in ('', 'nan', 'na'):
+                sentinels.add(float(mv))
+        except (TypeError, ValueError):
+            pass
+        val_arr = np.where(np.isin(val_arr, list(sentinels)), np.nan, val_arr)
 
         # Time axis
         time_raw, time_vname = _get_time_from_row(row)
@@ -504,6 +572,7 @@ def main():
             'paleoData_variableName': vname,
             'paleoData_units':        str(row.get('paleoData_units') or 'unknown'),
             'paleoData_compilations': compilations,
+            'paleoData_interpretations': json.dumps(interpretations(row)),
         })
         n_ok += 1
 
